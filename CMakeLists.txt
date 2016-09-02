@@ -85,7 +85,7 @@ set(PCL_INCL_DIR ${PCL_INCLUDE_DIRS})#pcl for velodyne
 set(PCL_LINK_DIR ${PCL_LIBRARY_DIRS})
 set(PCL_LINK_LIB ${PCL_LIBRARIES})
 
-set(VISI_INCL_DIR "/usr/local/include/libfreenect2" "./Kinect2")
+set(VISI_INCL_DIR "/usr/local/include/libfreenect2" "./VisionSensor")
 set(VISI_LINK_DIR "/usr/local/lib")
 set(VISI_LINK_LIB freenect2)
 
@@ -97,11 +97,11 @@ endif(UNIX)
 include_directories(${ALL_INCL_DIR})
 link_directories(${ALL_LINK_DIR})
 
-set(SOURCE_FILES main.cpp Move_Gait.cpp GaitGenerator.cpp rofo4.cpp TrajectoryGenerator.cpp log.cpp)
+set(SOURCE_FILES main.cpp Move_Gait.cpp GaitGenerator.cpp rofo4.cpp TrajectoryGenerator.cpp log.cpp Calibration.cpp ClimbStair.cpp PassStepDitch.cpp TreePass.cpp)
 PREPEND(FULL_SRC Server ${SOURCE_FILES})
 
-set(VISION_SOURCE_FILES Kinect2.cpp Kinect2Test.cpp Vision_Gait0.cpp)
-PREPEND(VISION_FULL_SRC Kinect2 ${VISION_SOURCE_FILES})
+set(VISION_SOURCE_FILES Kinect2.cpp  Vision_Gait0.cpp Velodyne.cpp Vision_Gait.cpp Vision_Terrain.cpp)
+PREPEND(VISION_FULL_SRC VisionSensor ${VISION_SOURCE_FILES})
 
 add_executable(Server ${VISION_FULL_SRC} ${FULL_SRC})
 target_link_libraries(Server ${ALL_LINK_LIB})

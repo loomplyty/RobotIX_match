@@ -800,6 +800,63 @@
                     <closed abbreviation="c"/>
                   </vis_param>
             </vis>
+
+            <climb default="climb_param">
+                <climb_param type="group">
+                    <zthr abbreviation="z" type="double" default="800"/>
+                    <ythr abbreviation="y" type="double" default="1000"/>
+                    <distance abbreviation="d" type="double" default="0.25"/>
+                    <n abbreviation="n" type="int" default="1"/>
+                    <height abbreviation="h" type="double" default="0.05"/>
+                    <totalCount abbreviation="t" type="int" default="3000"/>
+                </climb_param>
+            </climb>
+            <ay>
+                <param type="group">
+                    <param1 type="unique" default="all">
+                        <all abbreviation="a"/>
+                        <first abbreviation="f"/>
+                        <second abbreviation="s"/>
+                    </param1>
+                    <param2 type="unique" default="dy">
+                        <ay abbreviation="y" type="double" default="-0.85"/>
+                        <dy abbreviation="d" type="double" default="-0.05"/>
+                    </param2>
+                </param>
+            </ay>
+            <ca/>
+            <sdwk/>
+            <ssdwk/>
+            <up default="up_param">
+                <up_param type="group">
+                  <totalCount abbreviation="t" type="int" default="1000"/>
+                  <distance abbreviation="d" type="double" default="0.1"/>
+                  <distance2 abbreviation="e" type="double" default="0.2"/>
+                  <height abbreviation="h" type="double" default="0.25"/>
+                  <height1 abbreviation="i" type="double" default="0.1"/>
+                  <height2 abbreviation="j" type="double" default="0.1"/>
+                  <height3 abbreviation="k" type="double" default="0.16"/>
+                  <alpha abbreviation="w" type="double" default="-5.00"/>
+                </up_param>
+            </up>
+            <dw default="dw_param">
+                <dw_param type="group">
+                  <totalCount abbreviation="t" type="int" default="1000"/>
+                  <distance abbreviation="d" type="double" default="0.1"/>
+                  <distance2 abbreviation="e" type="double" default="0.2"/>
+                  <height abbreviation="h" type="double" default="0.25"/>
+                  <height1 abbreviation="i" type="double" default="0.1"/>
+                  <height2 abbreviation="j" type="double" default="0.1"/>
+                  <height3 abbreviation="k" type="double" default="0.05"/>
+                  <alpha abbreviation="w" type="double" default="5.00"/>
+                </dw_param>
+            </dw>
+            <twk default="VISION_WALK_PARAM">
+                 <VISION_WALK_PARAM type="group">
+                 <orentation abbreviation="o" type="int" default="0"/>
+                 </VISION_WALK_PARAM>
+            </twk>
+            <swk/>
         </Commands>
     </Server>
     <Controller>

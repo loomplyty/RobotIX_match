@@ -1,7 +1,7 @@
 #ifndef VISION_GAIT0_H
 #define VISION_GAIT0_H
 
-#include <Robot_Gait.h>
+#include <Basic_Gait.h>
 
 
 #define N_CALIBRATION 70
@@ -15,6 +15,7 @@ enum robotMove
     bodymove = 3,
     stepup = 4,
     stepdown = 5,
+    stopmove = 6,
 };
 
 struct VISION_WALK_PARAM
@@ -41,12 +42,12 @@ struct VISION_CALIBRATION_PARAM final:public aris::server::GaitParamBase
     double postureLib[6*N_CALIBRATION];
 };
 
-int RobotVisionWalk(Robots::RobotBase &robot, const VISION_WALK_PARAM &param);
+int RobotVisionWalk(Robots::RobotTypeIII &robot, const VISION_WALK_PARAM &param);
 
-void RobotBody(Robots::RobotBase &robot, const VISION_WALK_PARAM &pParam);
+int RobotBody(Robots::RobotTypeIII &robot, int count, float bodymovedata[3]);
 
-void RobotStepUp(Robots::RobotBase &robot, const VISION_WALK_PARAM &pParam);
+int RobotStepUp(Robots::RobotTypeIII &robot, int count, float stepheight);
 
-void RobotStepDown(Robots::RobotBase &robot, const VISION_WALK_PARAM &pParam);
+int RobotStepDown(Robots::RobotTypeIII &robot, int count, float stepdetph);
 
 #endif // VISION_GAIT0_H

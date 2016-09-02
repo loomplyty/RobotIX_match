@@ -21,11 +21,19 @@ using namespace std;
 // TY gait
 #include "Vision_Gait0.h"
 #include "Kinect2.h"
-#include "Kinect2Test.h"
+//#include "Kinect2Test.h"
 #include "GaitGenerator.h"
 
 // XYL gait
 #include "rofo4.h"
+
+// CX, ZYN, ZY's gait
+#include "Vision_Gait.h"
+#include "VisionSensor.h"
+#include "ClimbStair.h"
+#include "PassStepDitch.h"
+#include "Calibration.h"
+#include "TreePass.h"
 
 Kinect2Sensor::KINECT2 kinect2;
 
@@ -142,6 +150,16 @@ int main(int argc, char *argv[])
     rs.addCmd("edcl", Rofo::rofoEndParse,Rofo::rofoEndGait);
     rs.addCmd("ay",   Rofo::ayParse,     Rofo::ayGait);
 
+    // CX and ZYN's gait
+    rs.addCmd("sdwk", PassStepDitch::adjustWrapper.PassStepDitchParse, PassStepDitch::adjustWrapper.PassStepDitchGait);
+    rs.addCmd("ssdwk", PassStepDitch::adjustWrapper.StopPassStepDitchParse, PassStepDitch::adjustWrapper.PassStepDitchGait);
+    rs.addCmd("ca", Calibration::calibrationWrapper.visionCalibrateParse, Calibration::calibrationWrapper.visionCalibrate);
+    rs.addCmd("up", parseMoveWithupstairs, moveupstairs);
+    rs.addCmd("dw", parseMoveWithdownstairs, movedownstairs);
+
+    // ZY's gait
+    rs.addCmd("twk", TreePass::treePassWrapper.TreePassParse, TreePass::treePassWrapper.TreePaseWalk);
+    rs.addCmd("swk", TreePass::treePassWrapper.StopTreePassParse, TreePass::treePassWrapper.TreePaseWalk);
     // XYL gait initializations
     Rofo::RofoWalkInit();
 
