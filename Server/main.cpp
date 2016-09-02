@@ -24,6 +24,9 @@ using namespace std;
 #include "Kinect2Test.h"
 #include "GaitGenerator.h"
 
+// XYL gait
+#include "rofo4.h"
+
 Kinect2Sensor::KINECT2 kinect2;
 
 static auto visionSlopeThread = std::thread([]()
@@ -133,6 +136,14 @@ int main(int argc, char *argv[])
     rs.addCmd("imu",VersatileGait::parseIMU,VersatileGait::GoSlopeByVisionFast2);
     rs.addCmd("vis",VersatileGait::parseVision,VersatileGait::GoSlopeByVisionFast2);
     rs.addCmd("gsvf2",VersatileGait::parseGoSlopeVisionFast2,VersatileGait::GoSlopeByVisionFast2);
+
+    // XYL gait cmds
+    rs.addCmd("climb",Rofo::rofoParse,   Rofo::rofoGait);
+    rs.addCmd("edcl", Rofo::rofoEndParse,Rofo::rofoEndGait);
+    rs.addCmd("ay",   Rofo::ayParse,     Rofo::ayGait);
+
+    // XYL gait initializations
+    Rofo::RofoWalkInit();
 
 	rs.open();
 

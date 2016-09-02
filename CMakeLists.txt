@@ -97,7 +97,7 @@ endif(UNIX)
 include_directories(${ALL_INCL_DIR})
 link_directories(${ALL_LINK_DIR})
 
-set(SOURCE_FILES main.cpp Move_Gait.cpp GaitGenerator.cpp)
+set(SOURCE_FILES main.cpp Move_Gait.cpp GaitGenerator.cpp rofo4.cpp TrajectoryGenerator.cpp log.cpp)
 PREPEND(FULL_SRC Server ${SOURCE_FILES})
 
 set(VISION_SOURCE_FILES Kinect2.cpp Kinect2Test.cpp Vision_Gait0.cpp)
