@@ -127,6 +127,7 @@ int main(int argc, char *argv[])
     //waist cmd
     rs.addCmd("rcw", Robots::Gait::recoverWaistParse, Robots::Gait::recoverWaistGait);
     rs.addCmd("aw", Robots::Gait::adjustWaistParse, Robots::Gait::adjustWaistGait);
+    rs.addCmd("rcir", Robots::Gait::recoverParse, Robots::Gait::recoverInRampGait);
 
 
     rs.addCmd("cmb",ForceTask::parseContinueMoveBegin,ForceTask::continueMove);
