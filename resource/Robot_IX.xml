@@ -20,7 +20,7 @@
             <S2jpe type="matrix">{ 0, 0,      0,     0, -PI / 2, 0 }</S2jpe>
             <S3ipe type="matrix">{ 0, 0.059, -0.034, 0, -PI / 2, 0 }</S3ipe>
             <S3jpe type="matrix">{ 0, 0,      0,     0, -PI / 2, 0 }</S3jpe>
-            <Sfipe type="matrix">{ 0.065, 0, 0, 0, 0, 0 }</Sfipe>
+            <Sfipe type="matrix">{ 0.14629, -0.00047, 0, 0, 0, 0 }</Sfipe>
             <Sfjpe type="matrix">{ 0,   0, 0, 0, 0, 0 }</Sfjpe>
             <LFpe type="matrix">{-0.07288 , 0 ,  0.0732,  PI/2,  PI* 5/6,   -PI/2-PI*75/180}</LFpe>
             <LMpe type="matrix">{-0.12661 , 0 ,  0,       PI/2,  PI* 6/6,   -PI/2-PI*75/180}</LMpe>
@@ -958,18 +958,18 @@
                 <SlaveStation1 type="EK1100" />
                 <Junction1 type="EK1122" />
                 <ForceSensor1 type="AtiForceSensor" abs_id="5"/>
-                <ForceSensor2 type="AtiForceSensor" abs_id="3"/>
+                <ForceSensor2 type="AtiForceSensor" abs_id="0"/>
                 <Junction2 type="EK1122" />
-                <ForceSensor3 type="AtiForceSensor" abs_id="4"/>
+                <ForceSensor3 type="AtiForceSensor" abs_id="3"/>
                 <ForceSensor4 type="AtiForceSensor" abs_id="1"/>
                 <Junction3 type="EK1122" />
                 <ForceSensor5 type="AtiForceSensor" abs_id="2"/>
-                <ForceSensor6 type="AtiForceSensor" abs_id="0"/>
+                <ForceSensor6 type="AtiForceSensor" abs_id="4"/>
             </Slave>
         </EtherCat>
     </Controller>
     <Sensors>
-        <IMU active="true" type="xsens_imu" portLinux="/dev/ttyUSB0" baudRate="921600" sampleRate="400" PeImuGround2BodyGound="{0,0,0,0,-PI/2,PI}" PeImu2Body="{0,0,0,0,PI/2,0}"/>
+        <IMU active="true" type="xsens_imu" portLinux="/dev/ttyUSB0" baudRate="921600" sampleRate="400" PeImuGround2BodyGound="{0,0,0,PI,PI/2,3*PI/2}" PeImu2Body="{0,0,0,0,PI/2,PI/2}"/>
     </Sensors>
-    <UDP remote_ip="192.168.1.102" remote_port="6661" local_port="6660"/>
+    <UDP remote_ip="192.168.2.102" remote_port="6661" local_port="6660"/>
 </RobotIX>

@@ -2578,7 +2578,7 @@ namespace ForceTask
             inputEul_tmp[0]=0;//set yaw const 0
             //totalCount=totalCount_tmp;//param.count%totalCount illegal at count 0
 
-            planH=initPee[1]-0.005;
+            planH=initPee[1];
         }
 
         if(param.count%totalCount==0)
