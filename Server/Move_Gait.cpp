@@ -2506,6 +2506,8 @@ namespace ForceTask
             if(legID==0 || legID==1)
             {
                 param.imu_data->toEulBody2Ground(bodyEul213,PI,"213");
+                // cancel adjustment of the pitch angle
+                // bodyEul213[1] = 0;
                 for (int i=0;i<3;i++)
                 {
                     if(bodyEul213[i]>PI)
