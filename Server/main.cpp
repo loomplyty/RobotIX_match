@@ -37,58 +37,6 @@ using namespace std;
 
 Kinect2Sensor::KINECT2 kinect2;
 
-static auto visionSlopeThread = std::thread([]()
-{
-    sleep(1);
-    cout << "Sleep for a second waiting for something to init\n";
-
-    while(true)
-    {
-        VersatileGait::ScanningInfo info;
-        VersatileGait::visionSlopePipe.recvInNrt(info);
-        // cout<<"planner demanding received!"<<endl;
-
-        if(info.isInit == true)
-        {
-            //kinect2.InitMap();
-            if(VersatileGait::FlagV==VersatileGait::FlagVision::Free)
-            {
-                VersatileGait::FlagV=VersatileGait::FlagVision::VisionScanning;
-                memcpy(VersatileGait::gridMapBuff,kinect2.visData.gridMap,sizeof(float)*400*400);
-                // rt_printf("map buffer is (in vision thread): %f %f\n",VersatileGait::gridMapBuff[200][200],VersatileGait::gridMapBuff[300][200]);
-                VersatileGait::FlagV=VersatileGait::FlagVision::Free;
-            }
-
-        }
-        else
-        {
-            float TM_float[16];
-            for(int i=0;i<16;i++)
-                TM_float[i]=float(info.TM[i]);
-           // kinect2.GetPose(TM_float);
-            cout<<"Transformation Matrix got in Vision!"<<endl;
-            for(int i=0;i<4;i++)
-            {
-                cout<<TM_float[i*4]<<" "<<TM_float[i*4+1]<<" "<<TM_float[i*4+2]<<" "<<TM_float[i*4+3]<<" "<<endl;
-            }
-           // kinect2.UpdateConMap();
-
-            if(VersatileGait::FlagV==VersatileGait::FlagVision::Free)
-            {
-                VersatileGait::FlagV=VersatileGait::FlagVision::VisionScanning;
-                memcpy(VersatileGait::gridMapBuff,kinect2.visData.gridMap,sizeof(float)*400*400);
-                // rt_printf("map buffer is (in vision thread): %f %f\n",VersatileGait::gridMapBuff[200][200],VersatileGait::gridMapBuff[300][200]);
-                VersatileGait::FlagV=VersatileGait::FlagVision::Free;
-            }
-            //cout<<"map update"<<endl;
-        }
-
-        //  cout<<" map recorded to shared memory"<<endl;
-        VersatileGait::isScanningFinished = true;
-    }
-});
-
-
 int main(int argc, char *argv[])
 {
     ForceTask::ForceWalk forcewalker;
