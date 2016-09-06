@@ -145,6 +145,7 @@ int main(int argc, char *argv[])
     rs.addCmd("imu",VersatileGait::parseIMU,VersatileGait::GoSlopeByVisionFast2);
     rs.addCmd("vis",VersatileGait::parseVision,VersatileGait::GoSlopeByVisionFast2);
     rs.addCmd("gsvf2",VersatileGait::parseGoSlopeVisionFast2,VersatileGait::GoSlopeByVisionFast2);
+    rs.addCmd("pitch",VersatileGait::parsePitch,VersatileGait::GoSlopeByVisionFast2);
 
     // XYL gait cmds
     rs.addCmd("climb",Rofo::rofoParse,   Rofo::rofoGait);

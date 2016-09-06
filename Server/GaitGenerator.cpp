@@ -19,23 +19,36 @@ float gridMapBuff[400][400];
 
 const int Leg2Force[6]{0,1,2,3,4,5};
 
-const double stdLegPee2B[18]=
-{  -0.3,-1,-0.45,
-   -0.45,-1,0,
-   -0.45,-1,0.7,
-   0.3,-1,-0.45,
-   0.45,-1,0,
-   0.45,-1,0.7
+static double stdLegPee2B[18]=
+{  -0.3,-0.99,-0.55,
+   -0.45,-0.99,0,
+   -0.3,-0.99,0.55,
+   0.3,-0.99,-0.55,
+   0.45,-0.99,0,
+   0.3,-0.99,0.55
 };//change 0.85 to std offset height
-
-const double stdLegPee2C[18]=
-{  -0.3,0,-0.45,
+//{  -0.3,-0.99,-0.45,
+//   -0.45,-0.99,0,
+//   -0.45,-0.99,0.65,
+//   0.3,-0.99,-0.45,
+//   0.45,-0.99,0,
+//   0.45,-0.99,0.65
+//};//change 0.85 to std offset height
+static double stdLegPee2C[18]=
+{  -0.3,0,-0.55,
    -0.45,0,0,
-   -0.45,0,0.7,
-   0.3,0,-0.45,
+   -0.3,0,0.55,
+   0.3,0,-0.55,
    0.45,0,0,
-   0.45,0,0.7
+   0.3,0,0.55
 };//change 0.85 to std offset height
+//{  -0.3,0,-0.45,
+//   -0.45,0,0,
+//   -0.45,0,0.65,
+//   0.3,0,-0.45,
+//   0.45,0,0,
+//   0.45,0,0.65
+//};//change 0.85 to std offset height
 const double ScrewUpLimit[18]=
 {
     1.112,1.128,1.128,
@@ -58,7 +71,7 @@ const double ScrewDownLimit[18]=
 const double ScrewMargin{0.01};
 const double ForceTDvalue{70};// POSITIVE HERE
 const double dutyFactor{0.65};
-const double adjPitch{0.05};
+//const double adjPitch{0.05};
 
 
 static float gridMap[400][400];
@@ -72,7 +85,8 @@ static double dLateral=0;
 static bool isForceUsed=false;
 static bool isIMUUsed=false;
 static bool isVisionUsed=false;
-
+static double TDextend=0.06;
+static double dPitch=0;
 aris::control::Pipe<robotData> logPipe(true);
 
 
@@ -161,45 +175,6 @@ void parseGoSlopeVisionFast2(const std::string &cmd, const std::map<std::string,
         else if (i.first == "lateral")
         {
             param.l=stod(i.second);
-        }
-        else if (i.first == "mode")
-        {
-            param.m= stoi(i.second);
-        }
-    }
-    msg.copyStruct(param);
-    cout<<"parse finished"<<endl;
-
-
-}
-
-void parseGoSlopeVision2(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg)
-{
-    WalkGaitParams param;
-    for (auto &i : params)
-    {
-        if (i.first == "totalCount")
-        {
-            param.totalCount = std::stoi(i.second);
-        }
-        else if (i.first == "distance")
-        {
-            param.d = stod(i.second);
-        }
-        else if (i.first == "height")
-        {
-            param.h = stod(i.second);
-        }
-        else if (i.first == "alpha")
-        {
-            param.a = stod(i.second);
-        }
-        else if (i.first == "beta")
-        {
-            double b=stod(i.second);
-            if (abs(b)>0&& abs(b)<0.01)
-                b=0.01;
-            param.b =b;
         }
         else if (i.first == "mode")
         {
@@ -335,7 +310,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
 
             rt_printf("A new step begins...swingID %d %d %d\n",swingID[0],swingID[1],swingID[2]);
-            rt_printf("Param!!!!!!\nwalk d %f,\n walk lateral %f,\n walk b %f \n",param.d,param.l,param.b);
+            rt_printf("Param!!!!!!\nwalk d %f,\n walk lateral %f,\n walk b %f \n pitch p %f\n",param.d,param.l,param.b,dPitch);
 
             double euler[3];
             memset(euler,0,sizeof(double)*3);
@@ -346,7 +321,45 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
             euler[0]=0;// yaw being zero
             euler[1]=asin(sin(euler[1]));
-            euler[2]=asin(sin(euler[2]));
+            euler[2]=asin(sin(euler[2]));//pitch
+
+            //pitch is minus when moving forward
+            if(euler[2]<0)
+            {
+                stdLegPee2B[6]=-0.3-0.2*abs(sin(euler[2]));
+                stdLegPee2B[15]=0.3+0.2*abs(sin(euler[2]));
+                stdLegPee2C[6]=-0.3-0.2*abs(sin(euler[2]));
+                stdLegPee2C[15]=0.3+0.2*abs(sin(euler[2]));
+
+
+                stdLegPee2B[0]=-0.3;
+                stdLegPee2B[9]=0.3;
+                stdLegPee2C[0]=-0.3;
+                stdLegPee2C[9]=0.3;
+
+            }
+            else
+            {
+                stdLegPee2B[6]=-0.3;
+                stdLegPee2B[15]=0.3;
+                stdLegPee2C[6]=-0.3;
+                stdLegPee2C[15]=0.3;
+
+                stdLegPee2B[0]=-0.3-0.2*abs(sin(euler[2]));
+                stdLegPee2B[9]=0.3+0.2*abs(sin(euler[2]));
+                stdLegPee2C[0]=-0.3-0.2*abs(sin(euler[2]));
+                stdLegPee2C[9]=0.3+0.2*abs(sin(euler[2]));
+            }
+
+            stdLegPee2B[5]=0.1*sin(euler[2]);
+            stdLegPee2B[14]=0.1*sin(euler[2]);
+            stdLegPee2C[5]=0.1*sin(euler[2]);
+            stdLegPee2C[14]=0.1*sin(euler[2]);
+
+            rt_printf("std legpee2c\n");
+            for (int i=0;i<6;i++)
+                rt_printf("%f %f %f\n",stdLegPee2C[i*3],stdLegPee2C[i*3+1],stdLegPee2C[i*3+2]);
+
 
 
 
@@ -374,6 +387,9 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             double TM_c0_2_b0[16];
             // double TM_bo_2_c0[16];
             g.GetLeg2bodyFromLegs(Config0_2_b0.LegPee,TM_c0_2_b0);
+            //            rt_printf("TM_c0_2_b0\n");
+            //            for (int i=0;i<4;i++)
+            //                rt_printf("%f %f %f %f\n",TM_c0_2_b0[i*4],TM_c0_2_b0[i*4+1],TM_c0_2_b0[i*4+2],TM_c0_2_b0[i*4+3]);
             //aris::dynamic::s_inv_pm(TM_c0_2_b0,TM_b0_2_c0);
             memset(Config0_2_b0.BodyPee,0,sizeof(double)*6);
             aris::dynamic::s_pm_dot_pm(TM_b0_2_g,TM_c0_2_b0,TM_c0_2_g);
@@ -440,8 +456,17 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             c1_2_c0[3]=param.b;
             c1_2_c0[4]=0;
             c1_2_c0[5]=0;
-            aris::dynamic::s_pe2pm(c1_2_c0,TM_c1_2_c0,"213");
+
+
+            //            if(dPitch!=0 )
+            //            {
+            //                c1_2_c0[5]=dPitch;
+            //                dPitch=0;
+            //             }
+
+            aris::dynamic::s_pe2pm(c1_2_c0,TM_c1_2_c0,"231");
             aris::dynamic::s_inv_pm(TM_c1_2_c0,TM_c0_2_c1);
+
 
 
             //rt_printf("isVisionUsed:%d\n",int(isVisionUsed));
@@ -532,23 +557,182 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             rt_printf("TM_c1_2_c0\n");
             for(int i=0;i<4;i++)
                 rt_printf(" %f %f %f %f\n",TM_c1_2_c0[i*4+0],TM_c1_2_c0[i*4+1],TM_c1_2_c0[i*4+2],TM_c1_2_c0[i*4+3]);
+
+
             //stance legs 2 c0
             for(int i=0;i<3;i++)
                 memcpy(&Config1_2_c0.LegPee[stanceID[i]*3],&Config0_2_c0.LegPee[stanceID[i]*3],sizeof(double)*3);
 
-            //swing legs 2 c0
-            double SW_2_c1[9];
-            double SW_2_c0[9];
 
-            for(int i=0;i<3;i++)
+
+            //swing legs 2 c0
+            //            double SW_2_c1[9];
+            //            double SW_2_c0[9];
+
+            //            for(int i=0;i<3;i++)
+            //            {
+            //                memcpy(&SW_2_c1[i*3],&stdLegPee2C[swingID[i]*3],sizeof(double)*3);
+            //                SW_2_c1[i*3]=SW_2_c1[i*3]+lstraight/2;
+            //                SW_2_c1[i*3+1]=SW_2_c1[i*3+1];
+            //                SW_2_c1[i*3+2]=SW_2_c1[i*3+2]+dstraight/2;
+            //                aris::dynamic::s_pm_dot_pnt(TM_c1_2_c0,&SW_2_c1[i*3],&SW_2_c0[i*3]);
+            //                memcpy(&Config1_2_c0.LegPee[swingID[i]*3],&SW_2_c0[i*3],sizeof(double)*3);
+            //            }
+
+
+
+            //seperate the leg trajectory planning
+
+            double SW_2_c11[3];
+            double SW_2_c12[3];
+            double SW_2_c13[3];
+            double TM_c11_2_c0[16];
+            double TM_c12_2_c0[16];
+            double TM_c13_2_c0[16];
+
+            //[0 2 4]   [1 5 3]
+
+            if(swingID[0]==0)
             {
-                memcpy(&SW_2_c1[i*3],&stdLegPee2C[swingID[i]*3],sizeof(double)*3);
-                SW_2_c1[i*3]=SW_2_c1[i*3]+lstraight/2;
-                SW_2_c1[i*3+1]=SW_2_c1[i*3+1];
-                SW_2_c1[i*3+2]=SW_2_c1[i*3+2]+dstraight/2;
-                aris::dynamic::s_pm_dot_pnt(TM_c1_2_c0,&SW_2_c1[i*3],&SW_2_c0[i*3]);
-                memcpy(&Config1_2_c0.LegPee[swingID[i]*3],&SW_2_c0[i*3],sizeof(double)*3);
+                //for leg  0  -->(3 1 4)
+                double triangle1[9];
+
+                memcpy(&triangle1[0],&Config0_2_c0.LegPee[3*3],sizeof(double)*3);
+                memcpy(&triangle1[3],&Config0_2_c0.LegPee[1*3],sizeof(double)*3);
+                memcpy(&triangle1[6],&Config0_2_c0.LegPee[4*3],sizeof(double)*3);
+                g.GetTri2bodyFromTri(triangle1,param.b,TM_c11_2_c0);
+
+                TM_c11_2_c0[3]=lstraight;
+                TM_c11_2_c0[7]=0;
+                TM_c11_2_c0[11]=dstraight;
+
+                //                if(dPitch!=0)
+                //                {
+                //                    double c11_2_c0[6];
+                //                    aris::dynamic::s_pm2pe(TM_c11_2_c0,c11_2_c0,"231");
+                //                    c11_2_c0[5]+=dPitch;
+                //                    aris::dynamic::s_pe2pm(c11_2_c0,TM_c11_2_c0,"231");
+                //                }
+
+                SW_2_c11[0]=stdLegPee2C[0*3]+lstraight/2;
+                SW_2_c11[1]=stdLegPee2C[0*3+1];
+                SW_2_c11[2]=stdLegPee2C[0*3+2]+dstraight/2;
+
+                aris::dynamic::s_pm_dot_pnt(TM_c11_2_c0, SW_2_c11,&Config1_2_c0.LegPee[0*3]);
+                //for leg 2 --> (5 1 4)
+                double triangle2[9];
+                memcpy(&triangle2[0],&Config0_2_c0.LegPee[5*3],sizeof(double)*3);
+                memcpy(&triangle2[3],&Config0_2_c0.LegPee[1*3],sizeof(double)*3);
+                memcpy(&triangle2[6],&Config0_2_c0.LegPee[4*3],sizeof(double)*3);
+                g.GetTri2bodyFromTri(triangle2,param.b,TM_c12_2_c0);
+
+                TM_c12_2_c0[3]=lstraight;
+                TM_c12_2_c0[7]=0;
+                TM_c12_2_c0[11]=dstraight;
+
+                //                if(dPitch!=0)
+                //                {
+                //                    double c12_2_c0[6];
+                //                    aris::dynamic::s_pm2pe(TM_c12_2_c0,c12_2_c0,"231");
+                //                    c12_2_c0[5]+=dPitch;
+                //                    aris::dynamic::s_pe2pm(c12_2_c0,TM_c12_2_c0,"231");
+                //                }
+
+                SW_2_c12[0]=stdLegPee2C[2*3]+lstraight/2;
+                SW_2_c12[1]=stdLegPee2C[2*3+1];
+                SW_2_c12[2]=stdLegPee2C[2*3+2]+dstraight/2;
+
+                aris::dynamic::s_pm_dot_pnt(TM_c12_2_c0, SW_2_c12,&Config1_2_c0.LegPee[2*3]);
+
+                //for leg 4, same with the body
+                memcpy(TM_c13_2_c0,TM_c1_2_c0,sizeof(double)*16);
+
+                SW_2_c13[0]=stdLegPee2C[4*3]+lstraight/2;
+                SW_2_c13[1]=stdLegPee2C[4*3+1];
+                SW_2_c13[2]=stdLegPee2C[4*3+2]+dstraight/2;
+
+                aris::dynamic::s_pm_dot_pnt(TM_c13_2_c0, SW_2_c13,&Config1_2_c0.LegPee[4*3]);
+
             }
+            else
+            {
+                //for leg  3  -->(0 1 4)
+                double triangle1[9];
+
+                memcpy(&triangle1[0],&Config0_2_c0.LegPee[0*3],sizeof(double)*3);
+                memcpy(&triangle1[3],&Config0_2_c0.LegPee[1*3],sizeof(double)*3);
+                memcpy(&triangle1[6],&Config0_2_c0.LegPee[4*3],sizeof(double)*3);
+                g.GetTri2bodyFromTri(triangle1,param.b,TM_c11_2_c0);
+
+                TM_c11_2_c0[3]=lstraight;
+                TM_c11_2_c0[7]=0;
+                TM_c11_2_c0[11]=dstraight;
+
+                //                if(dPitch!=0)
+                //                {
+                //                    double c11_2_c0[6];
+                //                    aris::dynamic::s_pm2pe(TM_c11_2_c0,c11_2_c0,"231");
+                //                    c11_2_c0[5]+=dPitch;
+                //                    aris::dynamic::s_pe2pm(c11_2_c0,TM_c11_2_c0,"231");
+                //                }
+
+                SW_2_c11[0]=stdLegPee2C[3*3]+lstraight/2;
+                SW_2_c11[1]=stdLegPee2C[3*3+1];
+                SW_2_c11[2]=stdLegPee2C[3*3+2]+dstraight/2;
+
+                aris::dynamic::s_pm_dot_pnt(TM_c11_2_c0, SW_2_c11,&Config1_2_c0.LegPee[3*3]);
+
+                //for leg 5 --> (2 1 4)
+                double triangle2[9];
+                memcpy(&triangle2[0],&Config0_2_c0.LegPee[2*3],sizeof(double)*3);
+                memcpy(&triangle2[3],&Config0_2_c0.LegPee[1*3],sizeof(double)*3);
+                memcpy(&triangle2[6],&Config0_2_c0.LegPee[4*3],sizeof(double)*3);
+                g.GetTri2bodyFromTri(triangle2,param.b,TM_c12_2_c0);
+
+                TM_c12_2_c0[3]=lstraight;
+                TM_c12_2_c0[7]=0;
+                TM_c12_2_c0[11]=dstraight;
+
+
+                //                if(dPitch!=0)
+                //                {
+                //                    double c12_2_c0[6];
+                //                    aris::dynamic::s_pm2pe(TM_c12_2_c0,c12_2_c0,"231");
+                //                    c12_2_c0[5]+=dPitch;
+                //                    aris::dynamic::s_pe2pm(c12_2_c0,TM_c12_2_c0,"231");
+                //                }
+
+                SW_2_c12[0]=stdLegPee2C[5*3]+lstraight/2;
+                SW_2_c12[1]=stdLegPee2C[5*3+1];
+                SW_2_c12[2]=stdLegPee2C[5*3+2]+dstraight/2;
+
+                aris::dynamic::s_pm_dot_pnt(TM_c12_2_c0, SW_2_c12,&Config1_2_c0.LegPee[5*3]);
+
+                //for leg 1, same with the body
+                memcpy(TM_c13_2_c0,TM_c1_2_c0,sizeof(double)*16);
+
+                SW_2_c13[0]=stdLegPee2C[1*3]+lstraight/2;
+                SW_2_c13[1]=stdLegPee2C[1*3+1];
+                SW_2_c13[2]=stdLegPee2C[1*3+2]+dstraight/2;
+
+                aris::dynamic::s_pm_dot_pnt(TM_c13_2_c0, SW_2_c13,&Config1_2_c0.LegPee[1*3]);
+
+            }
+
+            rt_printf("TM_c11_2_c0\n");
+            for(int i=0;i<4;i++)
+                rt_printf(" %f %f %f %f\n",TM_c11_2_c0[i*4+0],TM_c11_2_c0[i*4+1],TM_c11_2_c0[i*4+2],TM_c11_2_c0[i*4+3]);
+
+            rt_printf("TM_c12_2_c0\n");
+            for(int i=0;i<4;i++)
+                rt_printf(" %f %f %f %f\n",TM_c12_2_c0[i*4+0],TM_c12_2_c0[i*4+1],TM_c12_2_c0[i*4+2],TM_c12_2_c0[i*4+3]);
+
+            rt_printf("TM_c13_2_c0\n");
+            for(int i=0;i<4;i++)
+                rt_printf(" %f %f %f %f\n",TM_c13_2_c0[i*4+0],TM_c13_2_c0[i*4+1],TM_c13_2_c0[i*4+2],TM_c13_2_c0[i*4+3]);
+
+
+
 
 
             //waist
@@ -570,7 +754,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             aris::dynamic::s_pm2pe(TM_c1_2_g0,c1_2_g0,"231");
             //rt_printf("c1_2_g0  %f %f %f \n",b1_2_g0[3],b1_2_g0[4],b1_2_g0[5]);
 
-            waistEnd=asin(sin(c1_2_g0[5]))+adjPitch;//decrease the angle
+            waistEnd=asin(sin(c1_2_g0[5]));//+adjPitch;//decrease the angle
 
 
             // body 2 c0  -->ok for RobotIX
@@ -583,7 +767,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             body_2_c1[2]=0+bodyOffset[2];//+offset
             body_2_c1[3]=0;
             body_2_c1[4]=0;
-            body_2_c1[5]=-adjPitch;
+            body_2_c1[5]=0;//-adjPitch;
 
 
             aris::dynamic::s_pm_dot_pnt(TM_c1_2_c0,body_2_c1,body_2_c0);
@@ -591,32 +775,24 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             body_2_c0[4]=c1_2_c0[4];
             body_2_c0[5]=c1_2_c0[5];
             memcpy(&Config1_2_c0.BodyPee,body_2_c0,sizeof(double)*6);
-            //c1 height adj to c0
-            // HeightAdj_c1_2_c0=0;
 
 
 
 
 
-            //            rt_printf("TM_b0_2_g0\n");
-            //            for(int i=0;i<4;i++)
-            //                rt_printf(" %f %f %f %f\n",TM_b0_2_g0[i*4+0],TM_b0_2_g0[i*4+1],TM_b0_2_g0[i*4+2],TM_b0_2_g0[i*4+3]);
 
-            //            rt_printf("TM_c0_2_g0");
-            //            for(int i=0;i<4;i++)
-            //                rt_printf(" %f %f %f %f\n",TM_c0_2_g0[i*4+0],TM_c0_2_g0[i*4+1],TM_c0_2_g0[i*4+2],TM_c0_2_g0[i*4+3]);
-
-            //            rt_printf("TM_c1_2_g0");
-            //            for(int i=0;i<4;i++)
-            //                rt_printf(" %f %f %f %f\n",TM_c1_2_g0[i*4+0],TM_c1_2_g0[i*4+1],TM_c1_2_g0[i*4+2],TM_c1_2_g0[i*4+3]);
-            //compute config 2 c1 ###
 
             memcpy(Config1_2_c1.BodyPee,body_2_c1,sizeof(double)*6);
             g.LegsTransform(Config1_2_c0.LegPee,TM_c0_2_c1,Config1_2_c1.LegPee);
 
-
-
             rt_printf("bodyEnd 2 c0 %f %f %f %f %f %f\n",Config1_2_c0.BodyPee[0],Config1_2_c0.BodyPee[1],Config1_2_c0.BodyPee[2],Config1_2_c0.BodyPee[3],Config1_2_c0.BodyPee[4],Config1_2_c0.BodyPee[5]);
+
+            //            rt_printf("LegPeeStart 2 c0\n");
+            //            for(int i=0;i<6;i++)
+            //            {
+            //                rt_printf("%f %f %f\n",Config0_2_c0.LegPee[3*i],Config0_2_c0.LegPee[3*i+1],Config0_2_c0.LegPee[3*i+2]);
+
+            //            }
 
             rt_printf("LegPeeEnd 2 c0\n");
             for(int i=0;i<6;i++)
@@ -624,36 +800,17 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
                 rt_printf("%f %f %f\n",Config1_2_c0.LegPee[3*i],Config1_2_c0.LegPee[3*i+1],Config1_2_c0.LegPee[3*i+2]);
 
             }
+
+            //            rt_printf("LegPeeEnd 2 c1\n");
+            //            for(int i=0;i<6;i++)
+            //            {
+            //                rt_printf("%f %f %f\n",Config1_2_c1.LegPee[3*i],Config1_2_c1.LegPee[3*i+1],Config1_2_c1.LegPee[3*i+2]);
+
+            //            }
             rt_printf("waist Angle %f\n",waistStart);
 
             rt_printf("waist End %f\n",waistEnd);
 
-            //            double TM_b1_2_c0[16];
-            //            double TM_b1_2_g[16];
-            //            aris::dynamic::s_pe2pm(body_2_c0,TM_b1_2_c0,"213");
-            //            aris::dynamic::s_pm_dot_pm(TM_c0_2_g,TM_b1_2_c0,TM_b1_2_g);
-
-            //            beginMak.setPrtPm(TM_b1_2_g);
-            //            beginMak.update();
-            //            robot.GetPeb(Config1_2_b1.BodyPee,beginMak,"213");
-            //            robot.GetPee(Config1_2_b1.LegPee,beginMak);
-
-
-            //            cout<<"step infomation"<<endl;
-            //            cout<<" Config0_2_c0, body"<<endl;
-            //            g.Display(Config0_2_c0.BodyPee,6);
-            //            cout<<" Config0_2_c0, leg"<<endl;
-            //            g.Display(Config0_2_c0.LegPee,18);
-
-            //            cout<<" Config1_2_c0, body"<<endl;
-            //            g.Display(Config1_2_c0.BodyPee,6);
-            //            cout<<" Config1_2_c0, leg"<<endl;
-            //            g.Display(Config1_2_c0.LegPee,18);
-
-            //            cout<<" Config0_2_c0, body"<<endl;
-            //            g.Display(Config0_2_c0.BodyPee,6);
-            //            cout<<" Config0_2_c0, leg"<<endl;
-            //            g.Display(Config0_2_c0.BodyPee,6);
 
 
 
@@ -790,7 +947,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
                 for(int i=0;i<3;i++)
                 {
                     swLegPee2c0[3*i]=Config1_2_c0.LegPee[3*swingID[i]];
-                    swLegPee2c0[3*i+1]=Config1_2_c0.LegPee[3*swingID[i]+1]-new_s*0.055;//y direction enlong
+                    swLegPee2c0[3*i+1]=Config1_2_c0.LegPee[3*swingID[i]+1]-new_s*TDextend;//y direction enlong
                     swLegPee2c0[3*i+2]=Config1_2_c0.LegPee[3*swingID[i]+2];
                 }
                 //memcpy(config_2_c0.BodyPee,Config1_2_c0.BodyPee,sizeof(double)*6);
@@ -798,7 +955,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
             for(int i=0;i<3;i++)
             {
-                if(stepCount+1>swingCount*1/2)
+                if(stepCount+1>swingCount*2/3)
                     if(isInTrans[swingID[i]]==true&&isTD[i]==false)
                     {// record td position
                         isTD[i]=true;
@@ -886,25 +1043,27 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
         memcpy(ScrewInFinal,ScrewIn,sizeof(double)*18);
         bool isReset;
         isReset=SetScrewLimits(ScrewIn,ScrewInFinal);
-         if(isReset==true)
+
+        //                //for test
+        //                isReset=false;
+
+        if(isReset==true)
         {
-
             robot.SetPin(ScrewInFinal);
-
         }
 
         int in_2_count;
         in_2_count=11556181;
 
-//        for(int i=0;i<6;i++)
-//            rt_printf("ScrewIn %f %f %f\n",ScrewIn[i*3],ScrewIn[i*3+1],ScrewIn[i*3+2]);
-//        for(int i=0;i<6;i++)
-//            rt_printf("ScrewFinal %f %f %f\n",ScrewInFinal[i*3],ScrewInFinal[i*3+1],ScrewInFinal[i*3+2]);
-//        for(int i=0;i<6;i++)
-//            rt_printf("Count %f %f %f\n",in_2_count*ScrewInFinal[i*3],in_2_count*ScrewInFinal[i*3+1],in_2_count*ScrewInFinal[i*3+2]);
+        //        for(int i=0;i<6;i++)
+        //            rt_printf("ScrewIn %f %f %f\n",ScrewIn[i*3],ScrewIn[i*3+1],ScrewIn[i*3+2]);
+        //        for(int i=0;i<6;i++)
+        //            rt_printf("ScrewFinal %f %f %f\n",ScrewInFinal[i*3],ScrewInFinal[i*3+1],ScrewInFinal[i*3+2]);
+        //        for(int i=0;i<6;i++)
+        //            rt_printf("Count %f %f %f\n",in_2_count*ScrewInFinal[i*3],in_2_count*ScrewInFinal[i*3+1],in_2_count*ScrewInFinal[i*3+2]);
 
 
-//        //
+        //        //
 
         stepCount+=1;
 
@@ -914,7 +1073,6 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             memcpy(swingID_rec,swingID,sizeof(int)*3);
             memcpy(swingID,stanceID,sizeof(int)*3);
             memcpy(stanceID,swingID_rec,sizeof(int)*3);
-
 
             stepNumFinished+=1;
             stepCount=0;
@@ -936,7 +1094,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
         }
 
         //*** log data during walking period***//
-        if(stepCount%10==0)
+        if(stepCount%500==0)
         {
             robotData data;
             //imu
@@ -1024,15 +1182,15 @@ void GaitGenerator::GetTri2bodyFromTri( double* Tris,double yaw,double *TM_C2B)
     double est_euler_c1_2_c0[6];
     aris::dynamic::s_pm2pe(TM_C2B,est_euler_c1_2_c0,"213");
 
-
-
-
-
-
 }
+
+
 
 void GaitGenerator::GetLeg2bodyFromLegs( double* Legs, double *TM_C2B)
 {
+
+    int stanceID[3]={0,2,4};
+    int swingID[3]={1,5,3};
 
     double stanceLegs[9];
     double swingLegs[9];
@@ -1042,12 +1200,23 @@ void GaitGenerator::GetLeg2bodyFromLegs( double* Legs, double *TM_C2B)
         memcpy(&swingLegs[3*i],&Legs[swingID[i]*3],sizeof(double)*3);
     }
 
+    double y1[3];
+    double y2[3];
     double y[3];
     double z[3];
     double x_prime[3]{1,0,0};
     double x[3];
 
-    GetPlaneFromStanceLegs(stanceLegs,y);
+    GetPlaneFromStanceLegs(stanceLegs,y1);
+    GetPlaneFromStanceLegs(swingLegs,y2);
+
+
+    normalize(y1);
+    normalize(y2);
+    y[0]=y1[0]+y2[0];  // this is actually the same as half quaternion method
+    y[1]=y1[1]+y2[1];
+    y[2]=y1[2]+y2[2];
+
 
     //GetPlaneFromStanceLegs(SWFoothold_2_b0,y1_2_b0);
     aris::dynamic::s_cro3(x_prime,y,z);
@@ -1079,143 +1248,24 @@ void GaitGenerator::GetLeg2bodyFromLegs( double* Legs, double *TM_C2B)
     TM_C2B[15]=1;
 }
 
-void GaitGenerator::slopeGetNextConfig(aris::dynamic::Model &model,const double IMUpitch,const double IMUroll)
+void parsePitch(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg)
 {
-    // 1. get current body and leg in c0 coordinate system
-    auto &robot = static_cast<Robots::RobotBase &>(model);
-    static aris::dynamic::FloatMarker beginMak{robot.ground()};
-
-    // ////   static double Config0_2_b0[16];
-    static RobotConfig Config0_2_c0;
-    static RobotConfig Config1_2_c0;
-    static RobotConfig Config1_2_c1;
-    static RobotConfig Config1_2_b1;
-
-    RobotConfig Config0_2_b0;
-    robot.GetPee(Config0_2_b0.LegPee,robot.body());
-
-    double TM_c0_2_b0[16];
-    GetLeg2bodyFromLegs(Config0_2_b0.LegPee,TM_c0_2_b0);
-    double TM_c0_2_g[16];
-    aris::dynamic::s_pm_dot_pm(*robot.body().pm(),TM_c0_2_b0,TM_c0_2_g);
-
-    beginMak.setPrtPm(TM_c0_2_g);
-    beginMak.update();
-    robot.GetPeb(Config0_2_c0.BodyPee,beginMak,"213");
-    robot.GetPee(Config0_2_c0.LegPee,beginMak);
-
-    // 2.set walking params in c0 coordinate system
-    //firstly, could get vision to TM_visTerran_2_c0
-
-    //otherwise, use only the current ground, in which c0  coicide with the ground
-
-    //first compute leg
-
-    double TM_c1_2_c0[16];
-    double TM_c0_2_c1[16];
-
-    double c1_2_c0[6];
-    c1_2_c0[0]=0;//x
-    c1_2_c0[1]=0;
-    c1_2_c0[2]=-m_Params.d;
-    c1_2_c0[3]=0;
-    c1_2_c0[4]=0;
-    c1_2_c0[5]=0;
-    aris::dynamic::s_pe2pm(c1_2_c0,TM_c1_2_c0,"213");
-    aris::dynamic::s_inv_pm(TM_c1_2_c0,TM_c0_2_c1);
-
-    //stance legs 2 c0
-    for(int i=0;i<3;i++)
-        memcpy(&Config1_2_c0.LegPee[stanceID[i]*3],&Config0_2_c0.LegPee[stanceID[i]*3],sizeof(double)*3);
-    //swing legs 2 c0
-    double SW_2_c1[9];
-    double SW_2_c0[9];
-
-    for(int i=0;i<3;i++)
+    for (auto &i : params)
     {
-        memcpy(&SW_2_c1[i*3],&stdLegPee2C[swingID[i]*3],sizeof(double)*3);
-        SW_2_c1[i*3]=SW_2_c1[i*3];
-        SW_2_c1[i*3+1]=SW_2_c1[i*3+1];
-        SW_2_c1[i*3+2]=SW_2_c1[i*3+1]-m_Params.d/2;
-        aris::dynamic::s_pm_dot_pnt(TM_c1_2_c0,&SW_2_c1[i*3],&SW_2_c0[i*3]);
-        memcpy(&Config1_2_c0.LegPee[swingID[i]*3],&SW_2_c0[i*3],sizeof(double)*3);
+        if(i.first =="pitch")
+        {
+            dPitch=std::stod(i.second);
+            break;
+        }
+        else
+        {
+
+            std::cout<<"parse failed"<<std::endl;
+
+        }
+
+        cout<<"parse finished"<<endl;
     }
-    // body 2 c0
-    double body_2_c1[6];
-    double body_2_c0[6];
-    body_2_c1[0]=0;//+offset
-    body_2_c1[1]=-stdLegPee2B[1];//0.85+offset
-    body_2_c1[2]=0;//+offset
-    body_2_c1[3]=0;
-    body_2_c1[4]=0;
-    body_2_c1[5]=0;
-
-    aris::dynamic::s_pm_dot_pnt(TM_c1_2_c0,body_2_c1,body_2_c0);
-    body_2_c0[3]=c1_2_c0[3];
-    body_2_c0[4]=c1_2_c0[4];
-    body_2_c0[5]=c1_2_c0[5];
-    memcpy(&Config1_2_c0.BodyPee,body_2_c0,sizeof(double)*6);
-
-    double TM_b1_2_c0[16];
-    double TM_b1_2_g[16];
-    aris::dynamic::s_pe2pm(body_2_c0,TM_b1_2_c0,"213");
-    aris::dynamic::s_pm_dot_pm(TM_c0_2_g,TM_b1_2_c0,TM_b1_2_g);
-
-    beginMak.setPrtPm(TM_b1_2_g);
-    beginMak.update();
-    robot.GetPeb(Config1_2_b1.BodyPee,beginMak,"213");
-    robot.GetPee(Config1_2_b1.LegPee,beginMak);
-
-    // TRaj
-
-    RobotConfig  config_2_b0;
-
-
-
-
-
-
-
-
-
-
-    //compute legs to b0;
-
-
-
-
-    //    stance_O_2_b0[0]=stance_C_2_b0[0];//+m_Params.d/2;
-    //    stance_O_2_b0[1]=stance_C_2_b0[1];
-    //    stance_O_2_b0[2]=stance_C_2_b0[2]+m_Params.d/2;
-
-
-
-    //    beginMak.setPrtPm(*robot.body().pm());
-    //    beginMak.update();
-
-
-
-
-
-
-    //    memset(m_CurrentConfig_b0.BodyPee,0,sizeof(double)*6);
-    //    memcpy(m_CurrentConfig_b0.LegPee,legPee2b,sizeof(double)*18);
-
-    //    memset(m_CurrentConfig_g.BodyPee,0,sizeof(double)*6);
-    //    m_CurrentConfig_g.BodyPee[3]=0;
-    //    m_CurrentConfig_g.BodyPee[4]=pitch;
-    //    m_CurrentConfig_g.BodyPee[5]=roll;
-
-
-    //    double TM_b0_2_g[16];
-    //    aris::dynamic::s_pe2pm(m_CurrentConfig_g.BodyPee,TM_b0_2_g,"213");
-
-    //    LegsTransform(legPee2b,TM_b0_2_g,m_CurrentConfig_g.LegPee);
-    //    double swingid[3];
-    //    memcpy(swingid,swingID,sizeof(double)*3);
-    //    memcpy(swingID,stanceID,sizeof(double)*3);
-    //    memcpy(stanceID,swingid,sizeof(double)*3);
-
 
 }
 
@@ -1381,231 +1431,6 @@ GaitGenerator::GaitGenerator()
 }
 
 
-bool GaitGenerator::GenerateTraj(const int count, const int totalCount,WalkGaitParams param,RobotConfig& config_2_b0)
-{
-    double TM_b1_2_b0[16];
-    aris::dynamic::s_pe2pm(m_NextConfig_b0.BodyPee,TM_b1_2_b0,"213");
-    //    cout<<"TM_b1_2_b0"<<endl;
-    //    Display(TM_b1_2_b0,16);
-
-
-    double s;
-    s=(1-cos(double(count)/totalCount*PI))/2;
-
-    // compute body pee, pos
-    if(abs(m_Params.b)>=0.01)
-    {
-        double YawAxisPos[3];
-        GetYawAxis(TM_b1_2_b0,YawAxisPos);
-        double TMpos[16];
-        RyAlongAxis(m_Params.b*s,YawAxisPos,TMpos);
-        config_2_b0.BodyPee[0]=TMpos[3];
-        config_2_b0.BodyPee[1]=s*TM_b1_2_b0[7];
-        config_2_b0.BodyPee[2]=TMpos[11];
-    }
-    else
-    {
-
-        config_2_b0.BodyPee[0]=s*TM_b1_2_b0[3];
-        config_2_b0.BodyPee[1]=s*TM_b1_2_b0[7];
-        config_2_b0.BodyPee[2]=s*TM_b1_2_b0[11];
-    }
-
-    //angle
-    double RotAxis[3];
-    double RotAngle;
-    TM_2_Rot(TM_b1_2_b0,RotAngle,RotAxis);
-    // cout<<"rot axis"<<endl;
-    // Display(RotAxis,3);
-    // cout<<"rot angle:"<<RotAngle<<endl;
-
-    double TM_2_b0[16];
-    Rot_2_TM(s*RotAngle,RotAxis,TM_2_b0);
-    TM_2_b0[3]=config_2_b0.BodyPee[0];
-    TM_2_b0[7]=config_2_b0.BodyPee[1];
-    TM_2_b0[11]=config_2_b0.BodyPee[2];
-
-    aris::dynamic::s_pm2pe(TM_2_b0,config_2_b0.BodyPee,"213");//body ok
-
-    //swing Leg Pee
-    double swLegPee2b[9];
-    bool ret=false;
-    static double swLegPee2b0[9];
-
-    for(int i=0;i<3;i++)
-    {
-        TrajEllipsoid(&m_CurrentConfig_b0.LegPee[swingID[i]*3],&m_NextConfig_b1.LegPee[swingID[i]*3],count,totalCount,&swLegPee2b[i*3]);
-
-        aris::dynamic::s_pm_dot_pnt(TM_2_b0,&swLegPee2b[3*i],&swLegPee2b0[3*i]);
-
-    }
-
-
-    static double swTD2b0[9];
-
-
-
-    if(isForceUsed==false)
-    {
-        if(count==totalCount)
-            ret=true;
-        else
-            ret=false;
-    }
-    else
-    {
-        static bool isTD[3]={false,false,false};
-        bool isInTrans[6];
-        double force[6];
-        // enlong the swing leg for touching down
-        double extraCount=2000;
-        if(count>totalCount)
-        {
-
-            // 5cm in 2s
-            double new_s=(1-cos(double(count-totalCount)/extraCount*PI))/2;
-            for(int i=0;i<3;i++)
-            {
-                swLegPee2b0[3*i]=m_NextConfig_b0.LegPee[3*swingID[i]];
-                swLegPee2b0[3*i+1]=m_NextConfig_b0.LegPee[3*swingID[i]+1]-new_s*0.04;//y direction enlong
-                swLegPee2b0[3*i+2]=m_NextConfig_b0.LegPee[3*swingID[i]+2];
-            }
-            memcpy(config_2_b0.BodyPee,m_NextConfig_b0.BodyPee,sizeof(double)*6);
-
-            //            config_2_b0.BodyPee[0]=TM_b1_2_b0[3];
-            //            config_2_b0.BodyPee[1]=TM_b1_2_b0[7];
-            //            config_2_b0.BodyPee[2]=TM_b1_2_b0[11];
-
-        }
-
-        //force judgement
-        for(int i=0;i<6;i++)
-        {
-            force[i]=param.force_data->at(Leg2Force[i]).Fz;
-        }
-
-        for (int i=0;i<6;i++)
-        {
-            //            if(force[i]<-50&&force[i]>-200)
-            if(force[i]<-ForceTDvalue)
-                isInTrans[i]=true;
-            else
-                isInTrans[i]=false;
-        }
-
-
-        static int gaitforcestate;
-
-        if(count==1)
-            gaitforcestate=GaitForceState::Swing;
-
-        //        if(count==totalCount+extraCount)
-        //            gaitforcestate=GaitForceState::Stance;
-
-        switch(gaitforcestate)
-        {
-        //        case GaitForceState::Stance:
-        //            if(isInTrans[swingID[0]]==true||isInTrans[swingID[1]]==true||isInTrans[swingID[2]]==true)
-        //                gaitforcestate=GaitForceState::LiftOff;
-        //        case GaitForceState::LiftOff:
-        //            if(isInTrans[swingID[0]]==false&&isInTrans[swingID[1]]==false&&isInTrans[swingID[2]]==false)
-        //                gaitforcestate=GaitForceState::Swing;
-        case GaitForceState::Swing:
-            if(count>totalCount*1/3)
-            {
-                if(isInTrans[swingID[0]]==true||isInTrans[swingID[1]]==true||isInTrans[swingID[2]]==true)
-                {
-                    gaitforcestate=GaitForceState::TouchDown;
-                    rt_printf("to touchdown!\n");
-                }
-            }
-            ret=false;
-            break;
-
-        case GaitForceState::TouchDown:
-
-            for(int i=0;i<3;i++)
-            {
-                if(isInTrans[swingID[i]]==true&&isTD[i]==false)
-                {
-                    memcpy(&swTD2b0[i*3],&swLegPee2b0[i*3],sizeof(double)*3);
-                    isTD[i]=true;
-                    rt_printf("leg touch down! %d count:%d\n",swingID[i],count);
-                }
-                if(count==totalCount+extraCount&&isInTrans[swingID[i]]==false&&isTD[i]==false)
-                {
-                    memcpy(&swTD2b0[i*3],&swLegPee2b0[i*3],sizeof(double)*3);
-                    isTD[i]=true;
-                    rt_printf("leg touch down time up! %d count:%d\n",swingID[i],count);
-                }
-                // else if(isInTrans[swingID[i]]==true&&isTD[i]==true)
-                else if(isTD[i]==true)
-                {
-                    memcpy(&swLegPee2b0[i*3],&swTD2b0[i*3],sizeof(double)*3);
-                }
-
-            }
-
-            if(isTD[0]==true&&isTD[1]==true&&isTD[2]==true)
-            {
-                gaitforcestate=GaitForceState::Stance;
-                for(int i=0;i<3;i++)
-                    memcpy(&swLegPee2b0[i*3],&swTD2b0[i*3],sizeof(double)*3);
-
-                rt_printf("to stance!\n");
-
-            }
-
-            ret=false;
-            break;
-
-        case GaitForceState::Stance:
-            isTD[0]=false;
-            isTD[1]=false;
-            isTD[2]=false;
-            for(int i=0;i<3;i++)
-            {
-                memcpy(&swLegPee2b0[i*3],&swTD2b0[i*3],sizeof(double)*3);
-                memcpy(&m_NextConfig_b0.LegPee[swingID[i]*3],&swTD2b0[i*3],sizeof(double)*3);// only update for three swing legs
-            }
-            double tm_b1_2_b0[16];
-            aris::dynamic::s_pe2pm(m_NextConfig_b0.BodyPee,tm_b1_2_b0,"213");
-            double tm_b0_2_b1[16];
-            aris::dynamic::s_inv_pm(tm_b1_2_b0,tm_b0_2_b1);
-            LegsTransform(m_NextConfig_b0.LegPee,tm_b0_2_b1,m_NextConfig_b1.LegPee);
-
-            ret=true;
-            break;
-        }
-    }
-    //stance& swing  Leg pee
-    for (int i=0;i<3;i++)
-    {
-        memcpy(&config_2_b0.LegPee[stanceID[i]*3],&m_CurrentConfig_b0.LegPee[stanceID[i]*3],sizeof(double)*3);//stancelegs are ok
-        memcpy(&config_2_b0.LegPee[swingID[i]*3],&swLegPee2b0[3*i],sizeof(double)*3);
-    }
-
-    //    cout<<"TM 2 B0"<<endl;
-    //    Display(TM_2_b0,16);
-
-    //    cout<<"currentConfigtb0.legpee"<<endl;
-    //    Display(m_CurrentConfig_b0.LegPee,18);
-    //    cout<<"nextConfigtb1.legpee"<<endl;
-    //    Display(m_NextConfig_b0.LegPee,18);
-    //    cout<<"swingLeg2b"<<endl;
-    //     Display(swLegPee2b,9);
-
-    //    ////    cout<<"tm_2_b0"<<endl;
-    //    ////    Display(TM_2_b0,16);
-    //        cout<<"legPee2b0"<<endl;
-    //        Display(config_2_b0.LegPee,18);
-    //    //     cout<<"bodyPee"<<endl;
-    //    //     Display(config_2_b0.BodyPee,6);
-    return ret;
-}
-
-
-
 
 
 void GaitGenerator::LegsTransform(const double *LegPee, const double *TM, double *LegPeeTranformed)
@@ -1692,22 +1517,6 @@ void GaitGenerator::Rz(const double rz,double* TM)
     TM[13]=0;
     TM[14]=0;
     TM[15]=1;
-}
-void GaitGenerator::RyAlongAxis(const double ry, const double *axisPos,double *TM)
-{
-    double TransTo[16];
-    double Rot[16];
-    double TransBack[16];
-    Trans(axisPos,TransTo);
-    double minus_axisPos[3];
-    minus_axisPos[0]=-axisPos[0];
-    minus_axisPos[1]=-axisPos[1];
-    minus_axisPos[2]=-axisPos[2];
-    Trans(minus_axisPos,TransBack);
-    Ry(ry,Rot);
-    double TMmid[16];
-    aris::dynamic::s_pm_dot_pm(TransTo,Rot,TMmid);
-    aris::dynamic::s_pm_dot_pm(TMmid,TransBack,TM);
 }
 
 void GaitGenerator::TMbody(const double *bodyP, const double *bodyR, double *tmbody)
@@ -1839,7 +1648,7 @@ void GaitGenerator::GetBodyOffsetRobotIX(const double pitch, const double roll, 
     // only for test
     offset[0]=-stdLegPee2B[1]*sin(roll);
     offset[1]=0.0;
-    offset[2]=(stdLegPee2B[1])*tan(pitch);// not sure depend on robot elevation
+    offset[2]=(stdLegPee2B[1]-0.2)*tan(pitch);// not sure depend on robot elevation
     rt_printf("offset %f %f %f\n",offset[0],offset[1],offset[2]);
 }
 void GaitGenerator::GetPlaneFromStanceLegs(const double *stanceLegs, double *normalVector)
@@ -1952,72 +1761,7 @@ void GaitGenerator::Display(const double *vec,int length)
 
 }
 
-void GaitGenerator::GetYawAxis(const double *TM, double *Yaxis)
-{
-    double Euler[3];
-    aris::dynamic::s_pm2pe(TM,Euler,"213");
-    double yaw;
-    yaw=Euler[3];
-    double Pmid[3];//0.5 horizontal displacement
-    Pmid[0]=TM[3];
-    Pmid[1]=0;
-    Pmid[2]=TM[11];
-    double D;
-    D=norm(Pmid);
-    double R;
-    R=D/sin(yaw/2);
-    double rotAxis[3];
-    rotAxis[0]=0;
-    rotAxis[2]=0;
-    rotAxis[1]=sign(yaw);
-    double normDir[3];
-    aris::dynamic::s_cro3(rotAxis,Pmid,normDir);
-    normalize(normDir);
-    Yaxis[0]=Pmid[0]+normDir[0]*R*cos(yaw/2);
-    Yaxis[1]=Pmid[1]+normDir[1]*R*cos(yaw/2);
-    Yaxis[2]=Pmid[2]+normDir[2]*R*cos(yaw/2);
 
-}
-void GaitGenerator::TM_2_Rot(const double *TM, double& theta, double *u)
-{
-    double q[4];
-    q[0]=0.5*sqrt(1+TM[0]+TM[5]+TM[10]);
-    q[1]=(TM[9]-TM[6])/(4*q[0]);
-    q[2]=(TM[2]-TM[8])/(4*q[0]);
-    q[3]=(TM[4]-TM[1])/(4*q[0]);
-    theta=acos(q[0])*2;
-    if(theta==0)
-    {
-        u[0]=0;
-        u[1]=1;
-        u[2]=0;
-    }
-    else
-    {
-        u[0]=q[1]/sin(theta/2);
-        u[1]=q[2]/sin(theta/2);
-        u[2]=q[3]/sin(theta/2);
-    }
-}
-void GaitGenerator::Rot_2_TM(const double theta, const double *u, double *TM)
-{
-    double q[4];
-    q[0]=cos(theta/2);
-    q[1]=u[0]*sin(theta/2);
-    q[2]=u[1]*sin(theta/2);
-    q[3]=u[2]*sin(theta/2);
-
-    TM[0]=q[0]*q[0]+q[1]*q[1]-q[2]*q[2]-q[3]*q[3];
-    TM[1]=2*q[1]*q[2]-2*q[0]*q[3];
-    TM[2]=2*q[1]*q[3]+2*q[0]*q[2];
-    TM[4]=2*q[1]*q[2]+2*q[0]*q[3];
-    TM[5]=q[0]*q[0]-q[1]*q[1]+q[2]*q[2]-q[3]*q[3];
-    TM[6]=2*q[2]*q[3]-2*q[0]*q[1] ;
-    TM[8]=2*q[1]*q[3]-2*q[0]*q[2];
-    TM[9]=2*q[2]*q[3]+2*q[0]*q[1] ;
-    TM[10]=q[0]*q[0]-q[1]*q[1]-q[2]*q[2]+q[3]*q[3];
-    TM[15]=1;
-}
 
 void GaitGenerator::TrajEllipsoid(const double *p0,const double* p1,const int count,const int totalCount,const double h,double* legpos)
 {
@@ -2034,25 +1778,36 @@ void GaitGenerator::TrajEllipsoid(const double *p0,const double* p1,const int co
     p01[2]=p1[2]-p0[2];
 
 
-    //    if (abs(p01[2])<0.01)
+
+    //this is simply not possible, because when p1 and p0 are so close, the traj will display a bizzare curve
+    //    double lateralAxis[3];
+    //    double y[3]={0, 1 ,0};
+    //    aris::dynamic::s_cro3(p01,y,lateralAxis);
+    //    aris::dynamic::s_cro3(p01,lateralAxis,axisShort);
+
+    //    double h_axis=axisShort[1];
+
+    //    if(h_axis==0)
     //    {
+
     //        axisShort[0]=0;
-    //        axisShort[1]=1;
+    //        axisShort[1]=h;
     //        axisShort[2]=0;
     //    }
     //    else
     //    {
-    //        aris::dynamic::s_cro3(x,p01,axisShort);
-    //    }
-    //    axisShort[0]=axisShort[0]/axisShort[1]*m_Params.h;
-    //    axisShort[1]=m_Params.h;
-    //    axisShort[2]=axisShort[2]/axisShort[1]*m_Params.h;
 
+    //        axisShort[0]=axisShort[0]/h_axis*h;
+    //        axisShort[1]=h;
+    //        axisShort[2]=axisShort[2]/h_axis*h;
+    //    }
+
+    double h_actual;
+    h_actual=sqrt(h*h+h*abs(p1[1]-p0[1]));
 
     axisShort[0]=0;
-    axisShort[1]=h;
+    axisShort[1]=h_actual;
     axisShort[2]=0;
-
 
     legpos[0]=(p0[0]+p1[0])/2+(p0[0]-p1[0])/2*cos(theta)+axisShort[0]*sin(theta);
     legpos[1]=(p0[1]+p1[1])/2+(p0[1]-p1[1])/2*cos(theta)+axisShort[1]*sin(theta);

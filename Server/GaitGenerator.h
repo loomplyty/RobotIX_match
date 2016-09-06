@@ -79,12 +79,11 @@ void parseAdjustSlope(const std::string &cmd, const std::map<std::string, std::s
 void parseForce(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
 void parseIMU(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
 void parseVision(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
+void parsePitch(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
 
 bool SetScrewLimits(double* plannedIn,double* changedIn);
 
-void parseGoSlopeVision(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
-void parseGoSlopeVision2(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
-void parseGoSlopeVisionFast2(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
+  void parseGoSlopeVisionFast2(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
 
 void parseGoSlopeHuman(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
 void parseGoSlopeFast(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
@@ -151,8 +150,8 @@ public:
 
 
     //  int m_GaitType;
-    int swingID[3]{0,2,4};
-    int stanceID[3]{1,5,3};
+//    int swingID[3]{0,2,4};
+//    int stanceID[3]{1,5,3};
 
     // useful functions
     void GetTerrainHeight2b( double* pos);
@@ -166,7 +165,6 @@ public:
     void Ry(const double ry,double* TM);
 
 
-    void RyAlongAxis(const double ry,const double *axisPos,double *TM);
 
     void Rz(const double rz,double* TM);
     double norm(double* vec);
@@ -176,11 +174,8 @@ public:
     int sign(double d);
     void TriangleIncenter(const double* stLegs,double* center);
     void LegsTransform(const double* LegPee,const double* TM,double *LegPeeTranformed);
-    void GetYawAxis(const double* TM, double* Yaxis);
 
-    void Rot_2_TM(const double theta, const double*u,double* TM);
-    void TM_2_Rot(const double* TM, double& theta, double* u);
-    void Display(const double *vec,int length);
+     void Display(const double *vec,int length);
     void TrajEllipsoid(const double *p0,const double* p1,const int count,const int totalCount,double* legpos);
     void TrajEllipsoid(const double *p0,const double* p1,const int count,const int totalCount,const double h,double* legpos);
 
