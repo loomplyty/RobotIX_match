@@ -80,6 +80,7 @@ void parseForce(const std::string &cmd, const std::map<std::string, std::string>
 void parseIMU(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
 void parseVision(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
 void parsePitch(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
+void parseGoSlope35(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
 
 bool SetScrewLimits(double* plannedIn,double* changedIn);
 
@@ -94,6 +95,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
 int GoSlopeByHuman(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &param_in);
 int GoSlopeFast(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &param_in);
+int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &param_in);
 
 struct RobotConfig
 {
