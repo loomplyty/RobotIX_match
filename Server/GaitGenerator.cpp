@@ -69,7 +69,7 @@ const double ScrewDownLimit[18]=
     0.722,0.738,0.738,
 };
 const double ScrewMargin{0.01};
-const double ForceTDvalue{120};// POSITIVE HERE
+const double ForceTDvalue{150};// POSITIVE HERE
 const double dutyFactor{0.625};
 //const double adjPitch{0.05};
 
@@ -1875,7 +1875,7 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
     static int stepNumFinished=0;
     static int stepCount=0;
     static bool isStepFinished=false;
-    static double dutyFactor{0.6};
+    static double dutyFactor{0.55};
 
     if(param.count==0)
     {
@@ -1909,21 +1909,21 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
     static bool isMidTD[2]={false,false};
 
     const double stdLeg2B[18]=
-    {  -0.3,-0.99,-0.55,
-       -0.45,-0.99,0,
-       -0.3,-0.99,0.55,
-       0.3,-0.99,-0.55,
-       0.45,-0.99,0,
-       0.3,-0.99,0.55
+    {  -0.25,-0.99,-0.55,
+       -0.475,-0.99,0,
+       -0.25,-0.99,0.55,
+       0.25,-0.99,-0.55,
+       0.475,-0.99,0,
+       0.25,-0.99,0.55
     };
 
     const double stdLeg2C[18]=
-    {  -0.3,-0,-0.55,
-       -0.45,-0,0,
-       -0.3,-0,0.55,
-       0.3,-0,-0.55,
-       0.45,-0,0,
-       0.3,-0,0.55
+    {  -0.25,-0,-0.55,
+       -0.475,-0,0,
+       -0.25,-0,0.55,
+       0.25,-0,-0.55,
+       0.475,-0,0,
+       0.25,-0,0.55
     };
 
     switch(gaitState)
@@ -1938,10 +1938,12 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
         int stanceCount1;
         int swingCount2;
         int stanceCount2;
+double ratio;
+ratio=0.5;
 
         swingCount1=param.totalCount*2*(1-dutyFactor);
         stanceCount1=param.totalCount*2*dutyFactor;
-        swingCount2=param.totalCount*2*(1-dutyFactor);
+        swingCount2=param.totalCount*2*(1-dutyFactor)*ratio;
         stanceCount2=param.totalCount*2*dutyFactor;
 
 
@@ -2044,7 +2046,7 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
             // first, use only the current ground, in which c0  coicide with the assumd ground
             //body velocity
 
-            \
+            
             double TM_c1_2_c0[16];
             double TM_c0_2_c1[16];
 
@@ -2088,7 +2090,8 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
             for(int i=0;i<2;i++)
             {
                 memcpy(&MID_2_c1[i*3],&stdLeg2C[middleID[i]*3],sizeof(double)*3);
-                aris::dynamic::s_pm_dot_pnt(TM_c1_2_c0,&MID_2_c1[i*3],&MID_2_c0[i*3]);
+                MID_2_c1[i*3+2]+=dstraight/2;
+ aris::dynamic::s_pm_dot_pnt(TM_c1_2_c0,&MID_2_c1[i*3],&MID_2_c0[i*3]);
                 memcpy(&Config1_2_c0.LegPee[middleID[i]*3],&MID_2_c0[i*3],sizeof(double)*3);
             }
 
@@ -2415,7 +2418,7 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
                 for(int i=0;i<2;i++)
                 {
                     if(stepCount+1>stanceCount1+swingCount2*2/3)
-                        if(isInTrans[swingID[i]]==true&&isTD[i]==false)
+                        if(isInTrans[middleID[i]]==true&&isTD[i]==false)
                         {// record td position
                             isTD[i]=true;
                             memcpy(&midTD_2_c0[i*3],&midLegPee2c0[i*3],sizeof(double)*3);
