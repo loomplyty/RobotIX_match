@@ -19,36 +19,6 @@ float gridMapBuff[400][400];
 
 const int Leg2Force[6]{0,1,2,3,4,5};
 
-static double stdLegPee2B[18]=
-{  -0.35,-0.975,-0.55,
-   -0.5,-0.975,0,
-   -0.35,-0.975,0.55,
-   0.35,-0.975,-0.55,
-   0.5,-0.975,0,
-   0.35,-0.975,0.55
-};//change 0.85 to std offset height
-//{  -0.3,-0.99,-0.45,
-//   -0.45,-0.99,0,
-//   -0.45,-0.99,0.65,
-//   0.3,-0.99,-0.45,
-//   0.45,-0.99,0,
-//   0.45,-0.99,0.65
-//};//change 0.85 to std offset height
-static double stdLegPee2C[18]=
-{  -0.35,0,-0.55,
-   -0.5,0,0,
-   -0.35,0,0.55,
-   0.35,0,-0.55,
-   0.5,0,0,
-   0.35,0,0.55
-};//change 0.85 to std offset height
-//{  -0.3,0,-0.45,
-//   -0.45,0,0,
-//   -0.45,0,0.65,
-//   0.3,0,-0.45,
-//   0.45,0,0,
-//   0.45,0,0.65
-//};//change 0.85 to std offset height
 const double ScrewUpLimit[18]=
 {
     1.112,1.128,1.128,
@@ -70,7 +40,6 @@ const double ScrewDownLimit[18]=
 };
 const double ScrewMargin{0.01};
 const double ForceTDvalue{150};// POSITIVE HERE
-const double dutyFactor{0.625};
 //const double adjPitch{0.05};
 
 
@@ -87,6 +56,10 @@ static bool isIMUUsed=false;
 static bool isVisionUsed=false;
 static double TDextend=0.07;
 static double dPitch=0;
+static double bodyElevation=0.975;
+static double stepHeight=0.065;
+static double dutyFactor{0.625};
+
 aris::control::Pipe<robotData> logPipe(true);
 
 
@@ -167,10 +140,6 @@ void parseGoSlopeVisionFast2(const std::string &cmd, const std::map<std::string,
         {
             param.d = stod(i.second);
         }
-        else if (i.first == "height")
-        {
-            param.h = stod(i.second);
-        }
 
         else if (i.first == "lateral")
         {
@@ -200,6 +169,8 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
 
 
+
+
     //param.b+=dAngle;
     static aris::dynamic::FloatMarker beginMak{robot.ground()};
     static aris::dynamic::FloatMarker InitMak{robot.body()};
@@ -208,6 +179,25 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
     static int stepCount=0;
     static bool isStepFinished=false;
 
+
+
+    static double stdLegPee2B[18]=
+    {  -0.35,-0.975,-0.55,
+       -0.5,-0.975,0,
+       -0.35,-0.975,0.55,
+       0.35,-0.975,-0.55,
+       0.5,-0.975,0,
+       0.35,-0.975,0.55
+    };
+
+    static double stdLegPee2C[18]=
+    {  -0.35,0,-0.55,
+       -0.5,0,0,
+       -0.35,0,0.55,
+       0.35,0,-0.55,
+       0.5,0,0,
+       0.35,0,0.55
+    };//change 0.85 to std offset height
     if(param.count==0)
     {
         rt_printf("reset static variables at start!\n");
@@ -305,12 +295,13 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             param.d+=-dDist;
             param.l+=-dLateral;
             param.b+=dAngle;
+            param.h=stepHeight;
 
             rt_printf("/////////////////current step started!//////////////////////////////\n");
 
 
             rt_printf("A new step begins...swingID %d %d %d\n",swingID[0],swingID[1],swingID[2]);
-            rt_printf("Param!!!!!!\nwalk d %f,\n walk lateral %f,\n walk b %f \n pitch p %f\n",param.d,param.l,param.b,dPitch);
+            rt_printf("Param!!!!!!\nwalk d %f,\n walk lateral %f,\n walk b %f \n pitch p %f\n body elevation %f\n legheigh %f\n",param.d,param.l,param.b,dPitch,bodyElevation,param.h);
 
             double euler[3];
             memset(euler,0,sizeof(double)*3);
@@ -566,18 +557,18 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
 
             //swing legs 2 c0
-                        double SW_2_c1[9];
-                        double SW_2_c0[9];
+            double SW_2_c1[9];
+            double SW_2_c0[9];
 
-                        for(int i=0;i<3;i++)
-                        {
-                            memcpy(&SW_2_c1[i*3],&stdLegPee2C[swingID[i]*3],sizeof(double)*3);
-                            SW_2_c1[i*3]=SW_2_c1[i*3]+lstraight/2;
-                            SW_2_c1[i*3+1]=SW_2_c1[i*3+1];
-                            SW_2_c1[i*3+2]=SW_2_c1[i*3+2]+dstraight/2;
-                            aris::dynamic::s_pm_dot_pnt(TM_c1_2_c0,&SW_2_c1[i*3],&SW_2_c0[i*3]);
-                            memcpy(&Config1_2_c0.LegPee[swingID[i]*3],&SW_2_c0[i*3],sizeof(double)*3);
-                        }
+            for(int i=0;i<3;i++)
+            {
+                memcpy(&SW_2_c1[i*3],&stdLegPee2C[swingID[i]*3],sizeof(double)*3);
+                SW_2_c1[i*3]=SW_2_c1[i*3]+lstraight/2;
+                SW_2_c1[i*3+1]=SW_2_c1[i*3+1];
+                SW_2_c1[i*3+2]=SW_2_c1[i*3+2]+dstraight/2;
+                aris::dynamic::s_pm_dot_pnt(TM_c1_2_c0,&SW_2_c1[i*3],&SW_2_c0[i*3]);
+                memcpy(&Config1_2_c0.LegPee[swingID[i]*3],&SW_2_c0[i*3],sizeof(double)*3);
+            }
 
 
 
@@ -594,87 +585,87 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
             //if(swingID[0]==0)
             //{
-                //for leg  0  -->(3 1 4)
-              //  double triangle1[9];
+            //for leg  0  -->(3 1 4)
+            //  double triangle1[9];
 
-                //memcpy(&triangle1[0],&Config0_2_c0.LegPee[3*3],sizeof(double)*3);
-                //memcpy(&triangle1[3],&Config0_2_c0.LegPee[1*3],sizeof(double)*3);
-                //memcpy(&triangle1[6],&Config0_2_c0.LegPee[4*3],sizeof(double)*3);
-                //g.GetTri2bodyFromTri(triangle1,param.b,TM_c11_2_c0);
+            //memcpy(&triangle1[0],&Config0_2_c0.LegPee[3*3],sizeof(double)*3);
+            //memcpy(&triangle1[3],&Config0_2_c0.LegPee[1*3],sizeof(double)*3);
+            //memcpy(&triangle1[6],&Config0_2_c0.LegPee[4*3],sizeof(double)*3);
+            //g.GetTri2bodyFromTri(triangle1,param.b,TM_c11_2_c0);
 
-                //TM_c11_2_c0[3]=lstraight;
-                //TM_c11_2_c0[7]=0;
-                //TM_c11_2_c0[11]=dstraight;
+            //TM_c11_2_c0[3]=lstraight;
+            //TM_c11_2_c0[7]=0;
+            //TM_c11_2_c0[11]=dstraight;
 
-                //                if(dPitch!=0)
-                //                {
-                //                    double c11_2_c0[6];
-                //                    aris::dynamic::s_pm2pe(TM_c11_2_c0,c11_2_c0,"231");
-                //                    c11_2_c0[5]+=dPitch;
-                //                    aris::dynamic::s_pe2pm(c11_2_c0,TM_c11_2_c0,"231");
-                //                }
+            //                if(dPitch!=0)
+            //                {
+            //                    double c11_2_c0[6];
+            //                    aris::dynamic::s_pm2pe(TM_c11_2_c0,c11_2_c0,"231");
+            //                    c11_2_c0[5]+=dPitch;
+            //                    aris::dynamic::s_pe2pm(c11_2_c0,TM_c11_2_c0,"231");
+            //                }
 
-                //SW_2_c11[0]=stdLegPee2C[0*3]+lstraight/2;
-                //SW_2_c11[1]=stdLegPee2C[0*3+1];
-                //SW_2_c11[2]=stdLegPee2C[0*3+2]+dstraight/2;
+            //SW_2_c11[0]=stdLegPee2C[0*3]+lstraight/2;
+            //SW_2_c11[1]=stdLegPee2C[0*3+1];
+            //SW_2_c11[2]=stdLegPee2C[0*3+2]+dstraight/2;
 
-               // aris::dynamic::s_pm_dot_pnt(TM_c11_2_c0, SW_2_c11,&Config1_2_c0.LegPee[0*3]);
-                //for leg 2 --> (5 1 4)
-              //  double triangle2[9];
-              //  memcpy(&triangle2[0],&Config0_2_c0.LegPee[5*3],sizeof(double)*3);
-              //  memcpy(&triangle2[3],&Config0_2_c0.LegPee[1*3],sizeof(double)*3);
-              //  memcpy(&triangle2[6],&Config0_2_c0.LegPee[4*3],sizeof(double)*3);
-              //  g.GetTri2bodyFromTri(triangle2,param.b,TM_c12_2_c0);
+            // aris::dynamic::s_pm_dot_pnt(TM_c11_2_c0, SW_2_c11,&Config1_2_c0.LegPee[0*3]);
+            //for leg 2 --> (5 1 4)
+            //  double triangle2[9];
+            //  memcpy(&triangle2[0],&Config0_2_c0.LegPee[5*3],sizeof(double)*3);
+            //  memcpy(&triangle2[3],&Config0_2_c0.LegPee[1*3],sizeof(double)*3);
+            //  memcpy(&triangle2[6],&Config0_2_c0.LegPee[4*3],sizeof(double)*3);
+            //  g.GetTri2bodyFromTri(triangle2,param.b,TM_c12_2_c0);
 
-              //  TM_c12_2_c0[3]=lstraight;
-              //  TM_c12_2_c0[7]=0;
-             //   TM_c12_2_c0[11]=dstraight;
+            //  TM_c12_2_c0[3]=lstraight;
+            //  TM_c12_2_c0[7]=0;
+            //   TM_c12_2_c0[11]=dstraight;
 
-                //                if(dPitch!=0)
-                //                {
-                //                    double c12_2_c0[6];
-                //                    aris::dynamic::s_pm2pe(TM_c12_2_c0,c12_2_c0,"231");
-                //                    c12_2_c0[5]+=dPitch;
-                //                    aris::dynamic::s_pe2pm(c12_2_c0,TM_c12_2_c0,"231");
-                //                }
+            //                if(dPitch!=0)
+            //                {
+            //                    double c12_2_c0[6];
+            //                    aris::dynamic::s_pm2pe(TM_c12_2_c0,c12_2_c0,"231");
+            //                    c12_2_c0[5]+=dPitch;
+            //                    aris::dynamic::s_pe2pm(c12_2_c0,TM_c12_2_c0,"231");
+            //                }
 
-             //   SW_2_c12[0]=stdLegPee2C[2*3]+lstraight/2;
-             //   SW_2_c12[1]=stdLegPee2C[2*3+1];
-             //   SW_2_c12[2]=stdLegPee2C[2*3+2]+dstraight/2;
+            //   SW_2_c12[0]=stdLegPee2C[2*3]+lstraight/2;
+            //   SW_2_c12[1]=stdLegPee2C[2*3+1];
+            //   SW_2_c12[2]=stdLegPee2C[2*3+2]+dstraight/2;
 
-             //   aris::dynamic::s_pm_dot_pnt(TM_c12_2_c0, SW_2_c12,&Config1_2_c0.LegPee[2*3]);
+            //   aris::dynamic::s_pm_dot_pnt(TM_c12_2_c0, SW_2_c12,&Config1_2_c0.LegPee[2*3]);
 
-                //for leg 4, same with the body
-             //   memcpy(TM_c13_2_c0,TM_c1_2_c0,sizeof(double)*16);
+            //for leg 4, same with the body
+            //   memcpy(TM_c13_2_c0,TM_c1_2_c0,sizeof(double)*16);
 
-              //  SW_2_c13[0]=stdLegPee2C[4*3]+lstraight/2;
-             //   SW_2_c13[1]=stdLegPee2C[4*3+1];
-             //   SW_2_c13[2]=stdLegPee2C[4*3+2]+dstraight/2;
+            //  SW_2_c13[0]=stdLegPee2C[4*3]+lstraight/2;
+            //   SW_2_c13[1]=stdLegPee2C[4*3+1];
+            //   SW_2_c13[2]=stdLegPee2C[4*3+2]+dstraight/2;
 
-             //   aris::dynamic::s_pm_dot_pnt(TM_c13_2_c0, SW_2_c13,&Config1_2_c0.LegPee[4*3]);
+            //   aris::dynamic::s_pm_dot_pnt(TM_c13_2_c0, SW_2_c13,&Config1_2_c0.LegPee[4*3]);
 
-           // }
-          //  else
-          //  {
-                //for leg  3  -->(0 1 4)
+            // }
+            //  else
+            //  {
+            //for leg  3  -->(0 1 4)
             //    double triangle1[9];
 
-             //   memcpy(&triangle1[0],&Config0_2_c0.LegPee[0*3],sizeof(double)*3);
-             //   memcpy(&triangle1[3],&Config0_2_c0.LegPee[1*3],sizeof(double)*3);
-             //   memcpy(&triangle1[6],&Config0_2_c0.LegPee[4*3],sizeof(double)*3);
+            //   memcpy(&triangle1[0],&Config0_2_c0.LegPee[0*3],sizeof(double)*3);
+            //   memcpy(&triangle1[3],&Config0_2_c0.LegPee[1*3],sizeof(double)*3);
+            //   memcpy(&triangle1[6],&Config0_2_c0.LegPee[4*3],sizeof(double)*3);
             //    g.GetTri2bodyFromTri(triangle1,param.b,TM_c11_2_c0);
 
             //    TM_c11_2_c0[3]=lstraight;
             //    TM_c11_2_c0[7]=0;
             //    TM_c11_2_c0[11]=dstraight;
 
-                //                if(dPitch!=0)
-                //                {
-                //                    double c11_2_c0[6];
-                //                    aris::dynamic::s_pm2pe(TM_c11_2_c0,c11_2_c0,"231");
-                //                    c11_2_c0[5]+=dPitch;
-                //                    aris::dynamic::s_pe2pm(c11_2_c0,TM_c11_2_c0,"231");
-                //                }
+            //                if(dPitch!=0)
+            //                {
+            //                    double c11_2_c0[6];
+            //                    aris::dynamic::s_pm2pe(TM_c11_2_c0,c11_2_c0,"231");
+            //                    c11_2_c0[5]+=dPitch;
+            //                    aris::dynamic::s_pe2pm(c11_2_c0,TM_c11_2_c0,"231");
+            //                }
 
             //    SW_2_c11[0]=stdLegPee2C[3*3]+lstraight/2;
             //    SW_2_c11[1]=stdLegPee2C[3*3+1];
@@ -682,54 +673,54 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
             //    aris::dynamic::s_pm_dot_pnt(TM_c11_2_c0, SW_2_c11,&Config1_2_c0.LegPee[3*3]);
 
-                //for leg 5 --> (2 1 4)
+            //for leg 5 --> (2 1 4)
             //    double triangle2[9];
             //    memcpy(&triangle2[0],&Config0_2_c0.LegPee[2*3],sizeof(double)*3);
             //    memcpy(&triangle2[3],&Config0_2_c0.LegPee[1*3],sizeof(double)*3);
             //    memcpy(&triangle2[6],&Config0_2_c0.LegPee[4*3],sizeof(double)*3);
             //    g.GetTri2bodyFromTri(triangle2,param.b,TM_c12_2_c0);
 
-             //   TM_c12_2_c0[3]=lstraight;
-             //   TM_c12_2_c0[7]=0;
-             //   TM_c12_2_c0[11]=dstraight;
+            //   TM_c12_2_c0[3]=lstraight;
+            //   TM_c12_2_c0[7]=0;
+            //   TM_c12_2_c0[11]=dstraight;
 
 
-                //                if(dPitch!=0)
-                //                {
-                //                    double c12_2_c0[6];
-                //                    aris::dynamic::s_pm2pe(TM_c12_2_c0,c12_2_c0,"231");
-                //                    c12_2_c0[5]+=dPitch;
-                //                    aris::dynamic::s_pe2pm(c12_2_c0,TM_c12_2_c0,"231");
-                //                }
+            //                if(dPitch!=0)
+            //                {
+            //                    double c12_2_c0[6];
+            //                    aris::dynamic::s_pm2pe(TM_c12_2_c0,c12_2_c0,"231");
+            //                    c12_2_c0[5]+=dPitch;
+            //                    aris::dynamic::s_pe2pm(c12_2_c0,TM_c12_2_c0,"231");
+            //                }
 
-             //   SW_2_c12[0]=stdLegPee2C[5*3]+lstraight/2;
-             //   SW_2_c12[1]=stdLegPee2C[5*3+1];
-             //   SW_2_c12[2]=stdLegPee2C[5*3+2]+dstraight/2;
+            //   SW_2_c12[0]=stdLegPee2C[5*3]+lstraight/2;
+            //   SW_2_c12[1]=stdLegPee2C[5*3+1];
+            //   SW_2_c12[2]=stdLegPee2C[5*3+2]+dstraight/2;
 
-             //   aris::dynamic::s_pm_dot_pnt(TM_c12_2_c0, SW_2_c12,&Config1_2_c0.LegPee[5*3]);
+            //   aris::dynamic::s_pm_dot_pnt(TM_c12_2_c0, SW_2_c12,&Config1_2_c0.LegPee[5*3]);
 
-                //for leg 1, same with the body
+            //for leg 1, same with the body
             //    memcpy(TM_c13_2_c0,TM_c1_2_c0,sizeof(double)*16);
 
-             //   SW_2_c13[0]=stdLegPee2C[1*3]+lstraight/2;
-             //   SW_2_c13[1]=stdLegPee2C[1*3+1];
-             //   SW_2_c13[2]=stdLegPee2C[1*3+2]+dstraight/2;
+            //   SW_2_c13[0]=stdLegPee2C[1*3]+lstraight/2;
+            //   SW_2_c13[1]=stdLegPee2C[1*3+1];
+            //   SW_2_c13[2]=stdLegPee2C[1*3+2]+dstraight/2;
 
             //    aris::dynamic::s_pm_dot_pnt(TM_c13_2_c0, SW_2_c13,&Config1_2_c0.LegPee[1*3]);
 
-          //  }
+            //  }
 
-          //  rt_printf("TM_c11_2_c0\n");
-          //  for(int i=0;i<4;i++)
-          //      rt_printf(" %f %f %f %f\n",TM_c11_2_c0[i*4+0],TM_c11_2_c0[i*4+1],TM_c11_2_c0[i*4+2],TM_c11_2_c0[i*4+3]);
+            //  rt_printf("TM_c11_2_c0\n");
+            //  for(int i=0;i<4;i++)
+            //      rt_printf(" %f %f %f %f\n",TM_c11_2_c0[i*4+0],TM_c11_2_c0[i*4+1],TM_c11_2_c0[i*4+2],TM_c11_2_c0[i*4+3]);
 
-          //  rt_printf("TM_c12_2_c0\n");
-          //  for(int i=0;i<4;i++)
-          //      rt_printf(" %f %f %f %f\n",TM_c12_2_c0[i*4+0],TM_c12_2_c0[i*4+1],TM_c12_2_c0[i*4+2],TM_c12_2_c0[i*4+3]);
+            //  rt_printf("TM_c12_2_c0\n");
+            //  for(int i=0;i<4;i++)
+            //      rt_printf(" %f %f %f %f\n",TM_c12_2_c0[i*4+0],TM_c12_2_c0[i*4+1],TM_c12_2_c0[i*4+2],TM_c12_2_c0[i*4+3]);
 
-          //  rt_printf("TM_c13_2_c0\n");
-          //  for(int i=0;i<4;i++)
-         //       rt_printf(" %f %f %f %f\n",TM_c13_2_c0[i*4+0],TM_c13_2_c0[i*4+1],TM_c13_2_c0[i*4+2],TM_c13_2_c0[i*4+3]);
+            //  rt_printf("TM_c13_2_c0\n");
+            //  for(int i=0;i<4;i++)
+            //       rt_printf(" %f %f %f %f\n",TM_c13_2_c0[i*4+0],TM_c13_2_c0[i*4+1],TM_c13_2_c0[i*4+2],TM_c13_2_c0[i*4+3]);
 
 
 
@@ -763,7 +754,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             double bodyOffset[3];
             g.GetBodyOffsetRobotIX(c1_2_g0[5],c1_2_g0[4],bodyOffset);//here use the last imu value to adjust body , or else use the next imu value to do this.
             body_2_c1[0]=0+bodyOffset[0];//+offset
-            body_2_c1[1]=-stdLegPee2B[1]+bodyOffset[1];//0.85+offset
+            body_2_c1[1]=bodyElevation+bodyOffset[1];//0.85+offset
             body_2_c1[2]=0+bodyOffset[2];//+offset
             body_2_c1[3]=0;
             body_2_c1[4]=0;
@@ -1184,8 +1175,6 @@ void GaitGenerator::GetTri2bodyFromTri( double* Tris,double yaw,double *TM_C2B)
 
 }
 
-
-
 void GaitGenerator::GetLeg2bodyFromLegs( double* Legs, double *TM_C2B)
 {
 
@@ -1269,7 +1258,6 @@ void parsePitch(const std::string &cmd, const std::map<std::string, std::string>
 
 }
 
-
 void parseAdjustSlope(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg)
 {
 
@@ -1303,6 +1291,22 @@ void parseAdjustSlope(const std::string &cmd, const std::map<std::string, std::s
         else if (i.first == "right")
         {
             dLateral-=0.04;
+            break;
+        }
+        else if (i.first == "bodyHeight")
+        {
+            bodyElevation=std::stod(i.second);
+            break;
+        }
+        else if (i.first == "legHeight")
+        {
+
+            stepHeight=std::stod(i.second);
+            break;
+        }
+        else if (i.first == "factor")
+        {
+            dutyFactor=std::stod(i.second);
             break;
         }
         else if (i.first == "stop")
@@ -1420,18 +1424,10 @@ bool SetScrewLimits(double* ScrewIn,double* ScrewInFinal)
 
 }
 
-
-
-
 GaitGenerator::GaitGenerator()
 {
-    memcpy(m_CurrentConfig_b0.LegPee,stdLegPee2B,sizeof(double)*18);
 
-    memcpy(m_NextConfig_b1.LegPee,stdLegPee2B,sizeof(double)*18);
-}
-
-
-
+ }
 
 void GaitGenerator::LegsTransform(const double *LegPee, const double *TM, double *LegPeeTranformed)
 {
@@ -1638,17 +1634,17 @@ void GaitGenerator::GetBodyOffset(const double pitch, const double roll, double*
 
     double Roll=asin(sin(roll));
     // only for test
-    offset[0]=-stdLegPee2B[1]*sin(Roll);
+    offset[0]=bodyElevation*sin(Roll);
     offset[1]=0.0;
-    offset[2]=stdLegPee2B[1]*sin(pitch);
+    offset[2]=-bodyElevation*sin(pitch);
 }
 void GaitGenerator::GetBodyOffsetRobotIX(const double pitch, const double roll, double* offset)
 {
 
     // only for test
-    offset[0]=-stdLegPee2B[1]*sin(roll);
+    offset[0]=bodyElevation*sin(roll);
     offset[1]=0.0;
-    offset[2]=(stdLegPee2B[1]-0.2)*tan(pitch);// not sure depend on robot elevation
+    offset[2]=(-bodyElevation-0.2)*tan(pitch);// not sure depend on robot elevation
     rt_printf("offset %f %f %f\n",offset[0],offset[1],offset[2]);
 }
 void GaitGenerator::GetPlaneFromStanceLegs(const double *stanceLegs, double *normalVector)
@@ -1938,8 +1934,8 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
         int stanceCount1;
         int swingCount2;
         int stanceCount2;
-double ratio;
-ratio=0.5;
+        double ratio;
+        ratio=0.6;
 
         swingCount1=param.totalCount*2*(1-dutyFactor);
         stanceCount1=param.totalCount*2*dutyFactor;
@@ -1950,12 +1946,13 @@ ratio=0.5;
         if(stepCount==0) //update vision and imu to update this configuration and compute the next configuration
         {
             param.d+=-dDist;
+            param.h=stepHeight;
 
             rt_printf("/////////////////current step started!//////////////////////////////\n");
 
 
             rt_printf("A new step begins...swingID  %d %d\n",swingID[0],swingID[1]);
-            rt_printf("Param!!!!!!\nwalk d %f\n",param.d);
+            rt_printf("Param!!!!!!\nwalk d %f\n bodyelevation %f\n stepHeight %f\n",param.d,bodyElevation,param.h);
 
             double euler[3];
             memset(euler,0,sizeof(double)*3);
@@ -2091,7 +2088,7 @@ ratio=0.5;
             {
                 memcpy(&MID_2_c1[i*3],&stdLeg2C[middleID[i]*3],sizeof(double)*3);
                 MID_2_c1[i*3+2]+=dstraight/2;
- aris::dynamic::s_pm_dot_pnt(TM_c1_2_c0,&MID_2_c1[i*3],&MID_2_c0[i*3]);
+                aris::dynamic::s_pm_dot_pnt(TM_c1_2_c0,&MID_2_c1[i*3],&MID_2_c0[i*3]);
                 memcpy(&Config1_2_c0.LegPee[middleID[i]*3],&MID_2_c0[i*3],sizeof(double)*3);
             }
 
@@ -2126,7 +2123,7 @@ ratio=0.5;
             double bodyOffset[3];
             g.GetBodyOffsetRobotIX(c1_2_g0[5],c1_2_g0[4],bodyOffset);//here use the last imu value to adjust body , or else use the next imu value to do this.
             body_2_c1[0]=0+bodyOffset[0];//+offset
-            body_2_c1[1]=-stdLegPee2B[1]+bodyOffset[1];//0.85+offset
+            body_2_c1[1]=bodyElevation+bodyOffset[1];//0.85+offset
             body_2_c1[2]=0+bodyOffset[2];//+offset
             body_2_c1[3]=0;
             body_2_c1[4]=0;
@@ -2256,7 +2253,7 @@ ratio=0.5;
                 memcpy(&swLegPee2c0[3],&Config1_2_c0.LegPee[swingID[1]*3],sizeof(double)*3);
             }
             //using force
-             if(stepCount==0)
+            if(stepCount==0)
             {
                 isStepForceUsed=isForceUsed;
                 //rt_printf("force usage updated!\n");
@@ -2327,7 +2324,7 @@ ratio=0.5;
                 {
                     isTD[0]=true;
                     isTD[1]=true;
-                 }
+                }
 
 
             }
@@ -2351,11 +2348,11 @@ ratio=0.5;
         }
         else if (stepCount+1>stanceCount1&&stepCount+1<=stanceCount1+stanceCount2)
         {
-//            rt_printf("middleID start pos\n");
-//            rt_printf("start %f %f %f\n",Config0_2_c0.LegPee[middleID[0]*3],Config0_2_c0.LegPee[middleID[0]*3+1],Config0_2_c0.LegPee[middleID[0]*3+2]);
-//            rt_printf("start %f %f %f\n",Config0_2_c0.LegPee[middleID[1]*3],Config0_2_c0.LegPee[middleID[1]*3+1],Config0_2_c0.LegPee[middleID[1]*3+2]);
-//            rt_printf("end %f %f %f\n",Config1_2_c0.LegPee[middleID[0]*3],Config1_2_c0.LegPee[middleID[0]*3+1],Config1_2_c0.LegPee[middleID[0]*3+2]);
-//            rt_printf("end %f %f %f\n",Config1_2_c0.LegPee[middleID[1]*3],Config1_2_c0.LegPee[middleID[1]*3+1],Config1_2_c0.LegPee[middleID[1]*3+2]);
+            //            rt_printf("middleID start pos\n");
+            //            rt_printf("start %f %f %f\n",Config0_2_c0.LegPee[middleID[0]*3],Config0_2_c0.LegPee[middleID[0]*3+1],Config0_2_c0.LegPee[middleID[0]*3+2]);
+            //            rt_printf("start %f %f %f\n",Config0_2_c0.LegPee[middleID[1]*3],Config0_2_c0.LegPee[middleID[1]*3+1],Config0_2_c0.LegPee[middleID[1]*3+2]);
+            //            rt_printf("end %f %f %f\n",Config1_2_c0.LegPee[middleID[0]*3],Config1_2_c0.LegPee[middleID[0]*3+1],Config1_2_c0.LegPee[middleID[0]*3+2]);
+            //            rt_printf("end %f %f %f\n",Config1_2_c0.LegPee[middleID[1]*3],Config1_2_c0.LegPee[middleID[1]*3+1],Config1_2_c0.LegPee[middleID[1]*3+2]);
 
 
 
@@ -2365,8 +2362,8 @@ ratio=0.5;
                 for(int i=0;i<2;i++)
                 {
                     g.TrajEllipsoid(&Config0_2_c0.LegPee[middleID[i]*3],&Config1_2_c0.LegPee[middleID[i]*3],stepCount-stanceCount1+1,swingCount2,param.h,&midLegPee2c0[i*3]);
-//                    rt_printf("mid pos  %f %f %f\n",midLegPee2c0[0],midLegPee2c0[1],midLegPee2c0[2]);
- //                   rt_printf("mid pos  %f %f %f\n",midLegPee2c0[3],midLegPee2c0[4],midLegPee2c0[5]);
+                    //                    rt_printf("mid pos  %f %f %f\n",midLegPee2c0[0],midLegPee2c0[1],midLegPee2c0[2]);
+                    //                   rt_printf("mid pos  %f %f %f\n",midLegPee2c0[3],midLegPee2c0[4],midLegPee2c0[5]);
 
                 }
             }
@@ -2439,7 +2436,7 @@ ratio=0.5;
                 {
                     isTD[0]=true;
                     isTD[1]=true;
-                 }
+                }
 
 
             }
@@ -2562,10 +2559,6 @@ void parseGoSlope35(const std::string &cmd, const std::map<std::string, std::str
         else if (i.first == "distance")
         {
             param.d = stod(i.second);
-        }
-        else if (i.first == "height")
-        {
-            param.h = stod(i.second);
         }
 
         else if (i.first == "mode")
