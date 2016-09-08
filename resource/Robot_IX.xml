@@ -898,6 +898,17 @@
                      <normalHeight abbreviation="n" type="double" default="0.05"/>
                  </up15_param>
             </up15>
+            <cc default="cc_param">
+                <cc_param type="group">
+                    <totalCount abbreviation="t" type="int" default="3000"/>
+                    <chasmWidth abbreviation="d" type="double" default="1"/>
+                    <stepHeight abbreviation="h" type="double" default="0.1"/>
+                    <dir_param type="unique" default="forward">
+                        <forward abbreviation="f"/>
+                        <backward abbreviation="b"/>
+                    </dir_param>
+                </cc_param>
+            </cc>
         </Commands>
     </Server>
     <Controller>

@@ -35,6 +35,9 @@ using namespace std;
 #include "TreePass.h"
 #include "UpOneSep.h"
 
+// LJM gait
+#include "cross_chasm.h"
+
 int main(int argc, char *argv[])
 {
     ForceTask::ForceWalk forcewalker;
@@ -118,6 +121,9 @@ int main(int argc, char *argv[])
     // ZY's gait
     rs.addCmd("twk", TreePass::treePassWrapper.TreePassParse, TreePass::treePassWrapper.TreePaseWalk);
     rs.addCmd("swk", TreePass::treePassWrapper.StopTreePassParse, TreePass::treePassWrapper.TreePaseWalk);
+
+    // LJM gait cmds
+    rs.addCmd("cc", crossChasmParse, crossChasmGait);
 
 //    rs.addCmd("up25", ParseUp25Step, Up25StepGait);
     rs.addCmd("up25", ParseUp25Step, Up25StepTwoTwoGait);
