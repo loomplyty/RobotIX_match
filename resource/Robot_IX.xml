@@ -766,7 +766,6 @@
             </odj>
             <gsvf2 default="wks_param">
                 <wks_param type="group">
-                    <totalCount abbreviation="t" type="int" default="2500"/>
                     <distance abbreviation="d" type="double" default="0"/>
                     <lateral abbreviation="l" type="double" default="0"/>
                     <mode abbreviation="m" type="int" default="1"/>
@@ -774,8 +773,8 @@
             </gsvf2>
             <gs35 default="wks_param">
                 <wks_param type="group">
-                    <totalCount abbreviation="t" type="int" default="2500"/>
                     <distance abbreviation="d" type="double" default="0"/>
+                    <lateral abbreviation="l" type="double" default="0"/>
                     <mode abbreviation="m" type="int" default="1"/>
                   </wks_param>
             </gs35>
@@ -795,7 +794,8 @@
                     <stop abbreviation="s"/>
 	            <bodyHeight abbreviation ="b" type="double" default="0.99"/>
 	            <legHeight abbreviation ="h" type="double" default="0.1"/>
-                    <factor abbreviation="f" type="double" default="0.6">
+                    <factor abbreviation="f" type="double" default="0.6"/>
+                    <totalCount abbreviation="t" type="int" default="2500"/>
                   </adj_param>
             </adj>
             <frc default="force_param">

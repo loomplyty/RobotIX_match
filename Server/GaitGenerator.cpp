@@ -59,6 +59,7 @@ static double dPitch=0;
 static double bodyElevation=0.975;
 static double stepHeight=0.065;
 static double dutyFactor{0.625};
+static int stepHalfTotalCount{2500};//half period
 
 aris::control::Pipe<robotData> logPipe(true);
 
@@ -132,11 +133,7 @@ void parseGoSlopeVisionFast2(const std::string &cmd, const std::map<std::string,
     WalkGaitParams param;
     for (auto &i : params)
     {
-        if (i.first == "totalCount")
-        {
-            param.totalCount = std::stoi(i.second);
-        }
-        else if (i.first == "distance")
+        if (i.first == "distance")
         {
             param.d = stod(i.second);
         }
@@ -287,8 +284,11 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
         int swingCount;
         int stanceCount;
-        swingCount=param.totalCount*2*(1-dutyFactor);
-        stanceCount=param.totalCount*2*dutyFactor;
+//        swingCount=param.totalCount*2*(1-dutyFactor);
+//        stanceCount=param.totalCount*2*dutyFactor;
+        swingCount=int(stepHalfTotalCount*2*(1-dutyFactor));
+        stanceCount=stepHalfTotalCount;//half period
+
 
         if(stepCount==0) //update vision and imu to update this configuration and compute the next configuration
         {
@@ -301,6 +301,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
 
             rt_printf("A new step begins...swingID %d %d %d\n",swingID[0],swingID[1],swingID[2]);
+            rt_printf("one pair leg step Count %d\n",stepHalfTotalCount);
             rt_printf("Param!!!!!!\nwalk d %f,\n walk lateral %f,\n walk b %f \n pitch p %f\n body elevation %f\n legheigh %f\n",param.d,param.l,param.b,dPitch,bodyElevation,param.h);
 
             double euler[3];
@@ -404,8 +405,8 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
 
             // 2.set walking params in c0 coordinate system
-            bodyVelDes_2_c[0]=-param.d/param.totalCount*1000;
-            bodyVelDes_2_c[1]=-param.l/param.totalCount*1000;
+            bodyVelDes_2_c[0]=-param.d/stepHalfTotalCount*1000;
+            bodyVelDes_2_c[1]=-param.l/stepHalfTotalCount*1000;
 
             bodyVelDes[0]=bodyVelDes_2_c[0]*cos(param.b)-bodyVelDes_2_c[1]*sin(param.b);//end velocity of c to c0
             bodyVelDes[1]=bodyVelDes_2_c[1]*cos(param.b)+bodyVelDes_2_c[0]*sin(param.b);
@@ -1315,6 +1316,11 @@ void parseAdjustSlope(const std::string &cmd, const std::map<std::string, std::s
             cout<<"stop command received !"<<endl;
             break;
         }
+        else if (i.first == "totalCount")
+        {
+            stepHalfTotalCount=std::stoi(i.second);
+            break;
+        }
         else
         {
             std::cout<<"parse failed"<<std::endl;
@@ -1879,7 +1885,10 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
         stepNumFinished=0;
         stepCount=0;
         isStepFinished=false;
+
         dDist=0;
+        dAngle=0;
+        dLateral=0;
     }
 
     static double waistStart;
@@ -1937,22 +1946,34 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
         double ratio;
         ratio=0.6;
 
-        swingCount1=param.totalCount*2*(1-dutyFactor);
-        stanceCount1=param.totalCount*2*dutyFactor;
-        swingCount2=param.totalCount*2*(1-dutyFactor)*ratio;
-        stanceCount2=param.totalCount*2*dutyFactor;
+        stanceCount1=stepHalfTotalCount;
+        swingCount1=int(stepHalfTotalCount*2*(1-dutyFactor));
+
+        swingCount2=int(stepHalfTotalCount*2*(1-dutyFactor))*ratio;
+        stanceCount2=swingCount2+stanceCount1-swingCount1;
+
+
+//        swingCount1=param.totalCount*2*(1-dutyFactor);
+//        stanceCount1=param.totalCount*2*dutyFactor;
+//        swingCount2=param.totalCount*2*(1-dutyFactor)*ratio;
+//        stanceCount2=param.totalCount*2*dutyFactor;
 
 
         if(stepCount==0) //update vision and imu to update this configuration and compute the next configuration
         {
+
             param.d+=-dDist;
+            param.l+=-dLateral;
+            param.b+=dAngle;
             param.h=stepHeight;
 
             rt_printf("/////////////////current step started!//////////////////////////////\n");
 
 
             rt_printf("A new step begins...swingID  %d %d\n",swingID[0],swingID[1]);
-            rt_printf("Param!!!!!!\nwalk d %f\n bodyelevation %f\n stepHeight %f\n",param.d,bodyElevation,param.h);
+            rt_printf("one pair leg step Count %d\n",stepHalfTotalCount);
+
+            rt_printf("Param!!!!!!\nwalk d %f,\n walk lateral %f,\n walk b %f \n pitch p %f\n body elevation %f\n legheigh %f\n",param.d,param.l,param.b,dPitch,bodyElevation,param.h);
 
             double euler[3];
             memset(euler,0,sizeof(double)*3);
@@ -2015,8 +2036,8 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
 
 
             // 2.set walking params in c0 coordinate system
-            bodyVelDes_2_c[0]=-param.d/param.totalCount*1000;
-            bodyVelDes_2_c[1]=-param.l/param.totalCount*1000;//0
+            bodyVelDes_2_c[0]=-param.d/stepHalfTotalCount*1000;
+            bodyVelDes_2_c[1]=-param.l/stepHalfTotalCount*1000;
 
             bodyVelDes[0]=bodyVelDes_2_c[0]*cos(param.b)-bodyVelDes_2_c[1]*sin(param.b);//end velocity of c to c0
             bodyVelDes[1]=bodyVelDes_2_c[1]*cos(param.b)+bodyVelDes_2_c[0]*sin(param.b);
@@ -2087,13 +2108,11 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
             for(int i=0;i<2;i++)
             {
                 memcpy(&MID_2_c1[i*3],&stdLeg2C[middleID[i]*3],sizeof(double)*3);
+                MID_2_c1[i*3+2]+=lstraight/2;
                 MID_2_c1[i*3+2]+=dstraight/2;
                 aris::dynamic::s_pm_dot_pnt(TM_c1_2_c0,&MID_2_c1[i*3],&MID_2_c0[i*3]);
                 memcpy(&Config1_2_c0.LegPee[middleID[i]*3],&MID_2_c0[i*3],sizeof(double)*3);
             }
-
-
-
 
             //waist
             //            double absb0_2_g[16];
@@ -2491,15 +2510,7 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
         int in_2_count;
         in_2_count=11556181;
 
-        //        for(int i=0;i<6;i++)
-        //            rt_printf("ScrewIn %f %f %f\n",ScrewIn[i*3],ScrewIn[i*3+1],ScrewIn[i*3+2]);
-        //        for(int i=0;i<6;i++)
-        //            rt_printf("ScrewFinal %f %f %f\n",ScrewInFinal[i*3],ScrewInFinal[i*3+1],ScrewInFinal[i*3+2]);
-        //        for(int i=0;i<6;i++)
-        //            rt_printf("Count %f %f %f\n",in_2_count*ScrewInFinal[i*3],in_2_count*ScrewInFinal[i*3+1],in_2_count*ScrewInFinal[i*3+2]);
 
-
-        //        //
 
         stepCount+=1;
 
@@ -2552,15 +2563,15 @@ void parseGoSlope35(const std::string &cmd, const std::map<std::string, std::str
     WalkGaitParams param;
     for (auto &i : params)
     {
-        if (i.first == "totalCount")
-        {
-            param.totalCount = std::stoi(i.second);
-        }
-        else if (i.first == "distance")
+
+        if (i.first == "distance")
         {
             param.d = stod(i.second);
         }
-
+        else if (i.first == "lateral")
+        {
+            param.l=stod(i.second);
+        }
         else if (i.first == "mode")
         {
             param.m= stoi(i.second);
