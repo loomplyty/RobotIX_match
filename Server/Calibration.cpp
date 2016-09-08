@@ -3,17 +3,10 @@
 namespace Calibration
 {
 
-double feetPosi[18] =
-{ -0.3,  -0.935, -0.65,
-  -0.45, -0.935,  0,
-  -0.3,  -0.935,  0.65,
-  0.3,  -0.935, -0.65,
-  0.45, -0.935,  0,
-  0.3,   -0.935,  0.65 };
-
 enum CalibrationState
 {
-    None=0,
+    None = 0,
+    BodyUP = 4,
     Go=1,
     Processing=2,
     Back=3,
@@ -87,7 +80,7 @@ auto CalibrationWrapper::visionCalibrateParse(const std::string &cmd, const std:
     double a;
 
     std::ifstream file;
-    std::string FileName = "/home/hex/Desktop/codes/chaixun/IXCalibration/Pose.txt";
+    std::string FileName = "/home/hex/Desktop/codes/chaixun/VisionIX/Pose.txt";
     cout<<"file name:"<<FileName<<endl;
 
     file.open(FileName);
@@ -113,6 +106,12 @@ auto CalibrationWrapper::visionCalibrateParse(const std::string &cmd, const std:
     msg_out.copyStruct(param);
 }
 
+auto CalibrationWrapper::captureParse(const string &cmd, const map<string, string> &param, aris::core::Msg &msg) -> void
+{
+    kinect2.SavePcd();
+    cout<<"capture map"<<endl;
+}
+
 auto CalibrationWrapper::visionCalibrate(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase & cali_param)->int
 {
     auto &robot=static_cast<Robots::RobotTypeIII &>(model);
@@ -124,6 +123,20 @@ auto CalibrationWrapper::visionCalibrate(aris::dynamic::Model &model, const aris
     double currentPeb[6];
     double s;
 
+    static int bodyUpCount = 0;
+    static double beginPee[18]{0};
+    static double beginPeb[6]{0};
+    static double bodyHeight = 0.95;
+
+   // static double partio = 1;
+   // static double bodypartio = 0.8;
+
+     static double partio = 0.6;
+        static double bodypartio = 1;
+
+//   static double partio = 0.8;
+//   static double bodypartio = 1;
+
     if(pSP.count==0)
     {
         rt_printf("calibration gait begins\n");
@@ -134,10 +147,48 @@ auto CalibrationWrapper::visionCalibrate(aris::dynamic::Model &model, const aris
     switch(calibrationState)
     {
     case None:
-        calibrationState=Go;
+        calibrationState = BodyUP;
+        break;
+    case BodyUP:
+        if(bodyUpCount == 0)
+        {
+            beginMak.setPrtPm(*robot.body().pm());
+            beginMak.update();
+            robot.GetPee(beginPee, beginMak);
+            robot.GetPeb(beginPeb, beginMak);
+            rt_printf("body Up \n");
+            rt_printf("bodyHeight: %lf\n", beginPee[1]);
+        }
+
+        double Peb[6], Pee[18];
+        std::copy(beginPeb, beginPeb + 6, Peb);
+        std::copy(beginPee, beginPee + 18, Pee);
+
+        double s1;
+        s1 = cos(PI * (bodyUpCount + 1) / 2000);
+
+        Peb[1] = beginPeb[1] + (bodyHeight + beginPee[1]) * (1 - s1)/2;
+
+        robot.SetPeb(Peb, beginMak);
+        robot.SetWa(0);
+        robot.SetPee(Pee, beginMak);
+
+        bodyUpCount++;
+
+        if(bodyUpCount == 2000)
+        {
+            calibrationState = Go;
+            bodyUpCount = 0;
+            beginMak.setPrtPm(*robot.body().pm());
+            beginMak.update();
+            robot.GetPee(beginPee, beginMak);
+            robot.GetPeb(beginPeb, beginMak);
+            rt_printf("body Up End \n");
+            rt_printf("bodyHeight: %lf\n", beginPee[1]);
+        }
         break;
     case Go:
-        if(localCount==0)
+        if(localCount == 0)
         {
             rt_printf("calibration posture %d\n",postureCount);
             memcpy(targetPosture,&pSP.postureLib[6*postureCount],sizeof(targetPosture));
@@ -146,19 +197,19 @@ auto CalibrationWrapper::visionCalibrate(aris::dynamic::Model &model, const aris
 
         s=PI*(localCount+1)/pSP.gaitLength;// (0,pi]
 
-        currentPeb[2]=0.6 * targetPosture[2]*M_PI/180.0*(1-cos(s))/2;
-        currentPeb[1]=0.6 * targetPosture[1]*M_PI/180.0*(1-cos(s))/2;
-        currentPeb[0]=0.6 * targetPosture[0]*M_PI/180.0*(1-cos(s))/2;
-        currentPeb[3]=0.6 * targetPosture[3]*(1-cos(s))/2;
-        currentPeb[4]=0.6 * targetPosture[4]*(1-cos(s))/2;
-        currentPeb[5]=0.6 * targetPosture[5]*(1-cos(s))/2;
+        currentPeb[2]= partio * targetPosture[2]*M_PI/180.0*(1-cos(s))/2;
+        currentPeb[1]= partio * targetPosture[1]*M_PI/180.0*(1-cos(s))/2;
+        currentPeb[0]= partio * targetPosture[0]*M_PI/180.0*(1-cos(s))/2;
+        currentPeb[3]= partio * targetPosture[3]*(1-cos(s))/2;
+        currentPeb[4]= partio * targetPosture[4]*(1-cos(s))/2 * bodypartio;
+        currentPeb[5]= partio * targetPosture[5]*(1-cos(s))/2;
 
         double bodyPose[6];
         TransM(currentPeb, bodyPose);
 
         robot.SetPeb(bodyPose,beginMak);
         robot.SetWa(0);
-        robot.SetPee(feetPosi, beginMak);
+        robot.SetPee(beginPee, beginMak);
         localCount+=1;
 
         if(pSP.gaitLength-localCount==0)
@@ -166,9 +217,9 @@ auto CalibrationWrapper::visionCalibrate(aris::dynamic::Model &model, const aris
             calibrationState=Processing;
             calibrationPipe.sendToNrt(postureCount);
             localCount = 0;
-            rt_printf("begin capture !\n");
-            rt_printf("raw: %lf %lf %lf \n", currentPeb[0], currentPeb[1], currentPeb[2]);
-            rt_printf("target: %lf %lf %lf \n", bodyPose[3], bodyPose[4], bodyPose[5]);
+            robot.GetPeb(beginPeb, beginMak);
+            rt_printf("bodyHeight: %lf\n", beginPeb[1]);
+            rt_printf("capture begin\n");
         }
         break;
     case Processing:
@@ -186,28 +237,32 @@ auto CalibrationWrapper::visionCalibrate(aris::dynamic::Model &model, const aris
         }
         s=PI*(localCount+1)/pSP.gaitLength;// (0,pi]
 
-        currentPeb[2]=0.6 * targetPosture[2]*M_PI/180.0*(1+cos(s))/2;
-        currentPeb[1]=0.6 * targetPosture[1]*M_PI/180.0*(1+cos(s))/2;
-        currentPeb[0]=0.6 * targetPosture[0]*M_PI/180.0*(1+cos(s))/2;
-        currentPeb[3]=0.6 * targetPosture[3]*(1+cos(s))/2;
-        currentPeb[4]=0.6 * targetPosture[4]*(1+cos(s))/2;
-        currentPeb[5]=0.6 * targetPosture[5]*(1+cos(s))/2;
+        currentPeb[2]= partio * targetPosture[2]*M_PI/180.0*(1+cos(s))/2;
+        currentPeb[1]= partio * targetPosture[1]*M_PI/180.0*(1+cos(s))/2;
+        currentPeb[0]= partio * targetPosture[0]*M_PI/180.0*(1+cos(s))/2;
+        currentPeb[3]= partio * targetPosture[3]*(1+cos(s))/2;
+        currentPeb[4]= partio * targetPosture[4]*(1+cos(s))/2 * bodypartio;
+        currentPeb[5]= partio * targetPosture[5]*(1+cos(s))/2;
 
         double bodyPose1[6];
         TransM(currentPeb, bodyPose1);
 
         robot.SetPeb(bodyPose1,beginMak);
         robot.SetWa(0);
-        robot.SetPee(feetPosi, beginMak);
+        robot.SetPee(beginPee, beginMak);
         localCount+=1;
 
         if(pSP.gaitLength-localCount==0)
         {
             postureCount+=1;
-            calibrationState=None;
+            calibrationState = Go;
             localCount = 0;
             if(postureCount==pSP.postureNum)
+            {
+                localCount = 0;
+                calibrationState = None;
                 return 0;
+            }
         }
         break;
     default:

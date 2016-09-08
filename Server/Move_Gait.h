@@ -38,8 +38,6 @@ namespace NormalGait
 		double targetBodyPE213[6]{0};
 		std::int32_t totalCount;
 	};
-	void parseMoveWithRotate(const std::string &cmd, const map<std::string, std::string> &params, aris::core::Msg &msg);
-	int moveWithRotate(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &param_in);
 
 	void StartRecordData();
 	void inv3(double * matrix,double * invmatrix);

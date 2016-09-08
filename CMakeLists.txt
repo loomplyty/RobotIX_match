@@ -97,10 +97,10 @@ endif(UNIX)
 include_directories(${ALL_INCL_DIR})
 link_directories(${ALL_LINK_DIR})
 
-set(SOURCE_FILES main.cpp Move_Gait.cpp GaitGenerator.cpp rofo4.cpp TrajectoryGenerator.cpp log.cpp Calibration.cpp ClimbStair.cpp PassStepDitch.cpp TreePass.cpp)
+set(SOURCE_FILES main.cpp Move_Gait.cpp GaitGenerator.cpp rofo4.cpp TrajectoryGenerator.cpp log.cpp Calibration.cpp ClimbStair.cpp PassStepDitch.cpp TreePass.cpp UpOneStep.cpp)
 PREPEND(FULL_SRC Server ${SOURCE_FILES})
 
-set(VISION_SOURCE_FILES Kinect2.cpp  Vision_Gait0.cpp Velodyne.cpp Vision_Gait.cpp Vision_Terrain.cpp)
+set(VISION_SOURCE_FILES VisionSensor.cpp Kinect2.cpp  Velodyne.cpp Vision_Gait.cpp Vision_Terrain.cpp)
 PREPEND(VISION_FULL_SRC VisionSensor ${VISION_SOURCE_FILES})
 
 add_executable(Server ${VISION_FULL_SRC} ${FULL_SRC})

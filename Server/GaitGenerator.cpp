@@ -171,8 +171,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
 
 
-    //param.b+=dAngle;
-    static aris::dynamic::FloatMarker beginMak{robot.ground()};
+     static aris::dynamic::FloatMarker beginMak{robot.ground()};
     static aris::dynamic::FloatMarker InitMak{robot.body()};
 
     static int stepNumFinished=0;
@@ -287,8 +286,8 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
         int swingCount;
         int stanceCount;
-        swingCount=param.totalCount*2*(1-dutyFactor);
-        stanceCount=param.totalCount*2*dutyFactor;
+        swingCount=int(param.totalCount/dutyFactor*(1-dutyFactor));
+        stanceCount=param.totalCount;
 
         if(stepCount==0) //update vision and imu to update this configuration and compute the next configuration
         {
@@ -1121,8 +1120,6 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
         return 1;
 
     case GaitState::End:
-        //        dDist=0;
-        //        dAngle=0;
         gaitState=GaitState::None;
         memset(bodyVelStart,0,sizeof(double)*2);
         rt_printf("step end\n");
@@ -1864,7 +1861,6 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
     WalkGaitParams param;
     memcpy(&param,&Param,sizeof(param));
 
-    //param.b+=dAngle;
     static aris::dynamic::FloatMarker beginMak{robot.ground()};
     static aris::dynamic::FloatMarker InitMak{robot.body()};
 
@@ -1880,6 +1876,8 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
         stepCount=0;
         isStepFinished=false;
         dDist=0;
+        dLateral=0;
+        dAngle=0;
     }
 
     static double waistStart;
@@ -1937,15 +1935,17 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
         double ratio;
         ratio=0.6;
 
-        swingCount1=param.totalCount*2*(1-dutyFactor);
-        stanceCount1=param.totalCount*2*dutyFactor;
-        swingCount2=param.totalCount*2*(1-dutyFactor)*ratio;
-        stanceCount2=param.totalCount*2*dutyFactor;
+        swingCount1=int(param.totalCount/dutyFactor*(1-dutyFactor));
+        stanceCount1=param.totalCount;
+        swingCount2=int(ratio*swingCount1);
+        stanceCount2=stanceCount1;
 
 
         if(stepCount==0) //update vision and imu to update this configuration and compute the next configuration
         {
             param.d+=-dDist;
+            param.l+=-dLateral;
+            param.b+=dAngle;
             param.h=stepHeight;
 
             rt_printf("/////////////////current step started!//////////////////////////////\n");
@@ -2087,6 +2087,7 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
             for(int i=0;i<2;i++)
             {
                 memcpy(&MID_2_c1[i*3],&stdLeg2C[middleID[i]*3],sizeof(double)*3);
+                MID_2_c1[i*3+0]+=lstraight/2;
                 MID_2_c1[i*3+2]+=dstraight/2;
                 aris::dynamic::s_pm_dot_pnt(TM_c1_2_c0,&MID_2_c1[i*3],&MID_2_c0[i*3]);
                 memcpy(&Config1_2_c0.LegPee[middleID[i]*3],&MID_2_c0[i*3],sizeof(double)*3);
@@ -2533,9 +2534,7 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
         return 1;
 
     case GaitState::End:
-        //        dDist=0;
-        //        dAngle=0;
-        gaitState=GaitState::None;
+          gaitState=GaitState::None;
         memset(bodyVelStart,0,sizeof(double)*2);
         rt_printf("step end\n");
         stepNumFinished=0;
