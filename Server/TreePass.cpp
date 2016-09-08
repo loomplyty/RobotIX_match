@@ -8,7 +8,7 @@ TreePassWrapper treePassWrapper;
 float TreePassWrapper::t_r=0.02f;    // radius of obstacle
 float TreePassWrapper::t_d= 2.5f;    // distance between two obstacles
 float TreePassWrapper::t_x= 0.8f;    // x set
-float TreePassWrapper::t_y= 0.45f;    // y set
+float TreePassWrapper::t_y= 0.3f;    // y set
 float TreePassWrapper::t_z= 0.0f;    // z set
 float TreePassWrapper::t_xDis=0.0f;  // x distacne between lidar and robot's origin
 float TreePassWrapper::t_yDis=0.70f;  // y distance between lidar and robot's origin
@@ -18,7 +18,7 @@ int  TreePassWrapper::t_t1=1700;    // first step count
 int  TreePassWrapper::t_t2=1700;    // second step count
 bool TreePassWrapper::t_isPause=1;  // paus
 
-float TreePassWrapper::t_deltax=0.6f;
+float TreePassWrapper::t_deltax=0.7f;
 float TreePassWrapper::t_deltay=1.0f;
 float TreePassWrapper::t_deltaz=0.6f;
 

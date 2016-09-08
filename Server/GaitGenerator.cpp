@@ -57,7 +57,7 @@ static bool isVisionUsed=false;
 static double TDextend=0.07;
 static double dPitch=0;
 static double bodyElevation=0.975;
-static double stepHeight=0.065;
+static double stepHeight=0.1;
 static double dutyFactor{0.625};
 
 aris::control::Pipe<robotData> logPipe(true);
@@ -233,7 +233,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
     static double bodyVelDes[2];
     static double bodyVelDes_2_c[2];
     static bool isTD[3]={false,false,false};
-
+    static double legHeight{0.1};
     //   static double HeightAdj_c1_2_c0;
 
 
@@ -295,6 +295,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             param.l+=-dLateral;
             param.b+=dAngle;
             param.h=stepHeight;
+            legHeight=stepHeight;
 
             rt_printf("/////////////////current step started!//////////////////////////////\n");
 
@@ -435,7 +436,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             // first, use only the current ground, in which c0  coicide with the assumd ground
             //body velocity
 
-            \
+            
             double TM_c1_2_c0[16];
             double TM_c0_2_c1[16];
 
@@ -876,7 +877,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             //normal traj
             for(int i=0;i<3;i++)
             {
-                g.TrajEllipsoid(&Config0_2_c0.LegPee[swingID[i]*3],&Config1_2_c0.LegPee[swingID[i]*3],stepCount+1,swingCount,param.h,&swLegPee2c0[i*3]);
+                g.TrajEllipsoid(&Config0_2_c0.LegPee[swingID[i]*3],&Config1_2_c0.LegPee[swingID[i]*3],stepCount+1,swingCount,legHeight,&swLegPee2c0[i*3]);
             }
         }
         else
@@ -1263,54 +1264,49 @@ void parseAdjustSlope(const std::string &cmd, const std::map<std::string, std::s
         if(i.first =="forward")
         {
             dDist+=0.04;
-            break;
+ 
         }
         else if (i.first == "backward")
         {
             dDist-=0.04;
-            break;
+ 
         }
         else if(i.first =="turnleft")
         {
             dAngle+=0.04;
-            break;
+ 
         }
         else if (i.first == "turnright")
         {
             dAngle-=0.04;
-            break;
+ 
         }
         else if(i.first =="left")
         {
             dLateral+=0.04;
-            break;
+ 
         }
         else if (i.first == "right")
         {
             dLateral-=0.04;
-            break;
+ 
         }
         else if (i.first == "bodyHeight")
         {
             bodyElevation=std::stod(i.second);
-            break;
+ 
         }
         else if (i.first == "legHeight")
         {
 
             stepHeight=std::stod(i.second);
-            break;
-        }
-        else if (i.first == "factor")
-        {
-            dutyFactor=std::stod(i.second);
-            break;
+ 
         }
         else if (i.first == "stop")
         {
             gaitCommand=GaitCommand::Stop;
             cout<<"stop command received !"<<endl;
-            break;
+ 
         }
         else
         {
@@ -1901,6 +1897,7 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
     static double bodyVelDes_2_c[2];
     static bool isTD[2]={false,false};
     static bool isMidTD[2]={false,false};
+    static double legHeight{0.1};
 
     const double stdLeg2B[18]=
     {  -0.25,-0.99,-0.55,
@@ -1947,6 +1944,7 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
             param.l+=-dLateral;
             param.b+=dAngle;
             param.h=stepHeight;
+            legHeight=stepHeight;
 
             rt_printf("/////////////////current step started!//////////////////////////////\n");
 
@@ -2245,7 +2243,7 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
                 //normal traj
                 for(int i=0;i<2;i++)
                 {
-                    g.TrajEllipsoid(&Config0_2_c0.LegPee[swingID[i]*3],&Config1_2_c0.LegPee[swingID[i]*3],stepCount+1,swingCount1,param.h,&swLegPee2c0[i*3]);
+                    g.TrajEllipsoid(&Config0_2_c0.LegPee[swingID[i]*3],&Config1_2_c0.LegPee[swingID[i]*3],stepCount+1,swingCount1,legHeight,&swLegPee2c0[i*3]);
                 }
             }
             else
@@ -2362,7 +2360,7 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
                 //normal traj
                 for(int i=0;i<2;i++)
                 {
-                    g.TrajEllipsoid(&Config0_2_c0.LegPee[middleID[i]*3],&Config1_2_c0.LegPee[middleID[i]*3],stepCount-stanceCount1+1,swingCount2,param.h,&midLegPee2c0[i*3]);
+                    g.TrajEllipsoid(&Config0_2_c0.LegPee[middleID[i]*3],&Config1_2_c0.LegPee[middleID[i]*3],stepCount-stanceCount1+1,swingCount2,legHeight,&midLegPee2c0[i*3]);
                     //                    rt_printf("mid pos  %f %f %f\n",midLegPee2c0[0],midLegPee2c0[1],midLegPee2c0[2]);
                     //                   rt_printf("mid pos  %f %f %f\n",midLegPee2c0[3],midLegPee2c0[4],midLegPee2c0[5]);
 
