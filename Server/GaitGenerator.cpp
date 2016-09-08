@@ -301,7 +301,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
 
             rt_printf("A new step begins...swingID %d %d %d\n",swingID[0],swingID[1],swingID[2]);
-            rt_printf("one pair leg step Count %d\n",stepHalfTotalCount);
+            rt_printf("one pair leg step Count %d\n",stanceCount);
             rt_printf("Param!!!!!!\nwalk d %f,\n walk lateral %f,\n walk b %f \n pitch p %f\n body elevation %f\n legheigh %f\n",param.d,param.l,param.b,dPitch,bodyElevation,param.h);
 
             double euler[3];
@@ -405,8 +405,8 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
 
             // 2.set walking params in c0 coordinate system
-            bodyVelDes_2_c[0]=-param.d/stepHalfTotalCount*1000;
-            bodyVelDes_2_c[1]=-param.l/stepHalfTotalCount*1000;
+            bodyVelDes_2_c[0]=-param.d/stanceCount*1000;
+            bodyVelDes_2_c[1]=-param.l/stanceCount*1000;
 
             bodyVelDes[0]=bodyVelDes_2_c[0]*cos(param.b)-bodyVelDes_2_c[1]*sin(param.b);//end velocity of c to c0
             bodyVelDes[1]=bodyVelDes_2_c[1]*cos(param.b)+bodyVelDes_2_c[0]*sin(param.b);
@@ -2036,8 +2036,8 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
 
 
             // 2.set walking params in c0 coordinate system
-            bodyVelDes_2_c[0]=-param.d/stepHalfTotalCount*1000;
-            bodyVelDes_2_c[1]=-param.l/stepHalfTotalCount*1000;
+            bodyVelDes_2_c[0]=-param.d/stanceCount1*1000;
+            bodyVelDes_2_c[1]=-param.l/stanceCount1*1000;
 
             bodyVelDes[0]=bodyVelDes_2_c[0]*cos(param.b)-bodyVelDes_2_c[1]*sin(param.b);//end velocity of c to c0
             bodyVelDes[1]=bodyVelDes_2_c[1]*cos(param.b)+bodyVelDes_2_c[0]*sin(param.b);
