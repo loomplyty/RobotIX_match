@@ -714,7 +714,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
             // c1_2_g0, this is the c1 absolute angle to ground
 //            waistEnd=asin(sin(c1_2_g0[5]));
-            waistEnd=asin(sin(c1_2_g0[5]));
+            waistEnd=asin(sin(c1_2_g0[5]))*pitchAdjFactor;
 
 
             // body 2 c0  -->ok for RobotIX
@@ -727,13 +727,13 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             body_2_c1[2]=0+bodyOffset[2];//+offset
             body_2_c1[3]=0;
             body_2_c1[4]=0;
-            body_2_c1[5]=0;//-adjPitch;
+            body_2_c1[5]=-asin(sin(c1_2_g0[5]))*(1-pitchAdjFactor);
 
 
             aris::dynamic::s_pm_dot_pnt(TM_c1_2_c0,body_2_c1,body_2_c0);
-            body_2_c0[3]=c1_2_c0[3];
-            body_2_c0[4]=c1_2_c0[4];
-            body_2_c0[5]=c1_2_c0[5];
+//            body_2_c0[3]=c1_2_c0[3];
+//            body_2_c0[4]=c1_2_c0[4];
+//            body_2_c0[5]=c1_2_c0[5];
             memcpy(&Config1_2_c0.BodyPee,body_2_c0,sizeof(double)*6);
 
 
@@ -2122,7 +2122,7 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
             aris::dynamic::s_pm2pe(TM_c1_2_g0,c1_2_g0,"231");
             //rt_printf("c1_2_g0  %f %f %f \n",b1_2_g0[3],b1_2_g0[4],b1_2_g0[5]);
 
-            waistEnd=asin(sin(c1_2_g0[5]));//+adjPitch;//decrease the angle
+            waistEnd=asin(sin(c1_2_g0[5]))*pitchAdjFactor;
 
 
             // body 2 c0  -->ok for RobotIX
@@ -2135,13 +2135,13 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
             body_2_c1[2]=0+bodyOffset[2];//+offset
             body_2_c1[3]=0;
             body_2_c1[4]=0;
-            body_2_c1[5]=0;
+            body_2_c1[5]=-asin(sin(c1_2_g0[5]))*(1-pitchAdjFactor);
 
 
             aris::dynamic::s_pm_dot_pnt(TM_c1_2_c0,body_2_c1,body_2_c0);
-            body_2_c0[3]=c1_2_c0[3];
-            body_2_c0[4]=c1_2_c0[4];
-            body_2_c0[5]=c1_2_c0[5];
+//            body_2_c0[3]=c1_2_c0[3];
+//            body_2_c0[4]=c1_2_c0[4];
+//            body_2_c0[5]=c1_2_c0[5];
             memcpy(&Config1_2_c0.BodyPee,body_2_c0,sizeof(double)*6);
 
 
