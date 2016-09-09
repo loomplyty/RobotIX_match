@@ -60,7 +60,7 @@ static double bodyElevation=0.975;
 static double stepHeight=0.1;
 static double dutyFactor{0.625};
 static int stepHalfTotalCount{2500};//half period
-
+static double pitchAdjFactor{0.7};
 aris::control::Pipe<robotData> logPipe(true);
 
 
@@ -124,9 +124,14 @@ void startLogDataThread()
         }
         file.close();
     });
+}
 
+
+void updateSTDLeg2C(double * euler,double * stdLegPee2c)
+{
 
 }
+
 
 void parseGoSlopeVisionFast2(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg)
 {
@@ -164,36 +169,22 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
     WalkGaitParams param;
     memcpy(&param,&Param,sizeof(param));
 
-
-
-
-
-     static aris::dynamic::FloatMarker beginMak{robot.ground()};
+    static aris::dynamic::FloatMarker beginMak{robot.ground()};
     static aris::dynamic::FloatMarker InitMak{robot.body()};
 
     static int stepNumFinished=0;
     static int stepCount=0;
     static bool isStepFinished=false;
 
-
-
-    static double stdLegPee2B[18]=
-    {  -0.35,-0.975,-0.55,
-       -0.5,-0.975,0,
-       -0.35,-0.975,0.55,
-       0.35,-0.975,-0.55,
-       0.5,-0.975,0,
-       0.35,-0.975,0.55
+    static double stdLegPee2C[18]=
+    {  -0.33,0,-0.575,
+       -0.45,0,0,
+       -0.33,0,0.575,
+       0.33,0,-0.575,
+       0.45,0,0,
+       0.33,0,0.575
     };
 
-    static double stdLegPee2C[18]=
-    {  -0.35,0,-0.55,
-       -0.5,0,0,
-       -0.35,0,0.55,
-       0.35,0,-0.55,
-       0.5,0,0,
-       0.35,0,0.55
-    };//change 0.85 to std offset height
     if(param.count==0)
     {
         rt_printf("reset static variables at start!\n");
@@ -203,12 +194,6 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
         dDist=0;
         dAngle=0;
         dLateral=0;
-        //        for(int i=0;i<400;i++)
-        //            for(int j=0;j<400;j++)
-        //            {
-        //                gridMap[i][j]=-0.9;
-        //               // gridMapBuff[i][j]=-0.9;
-        //            }
     }
 
     static double waistStart;
@@ -216,8 +201,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
     static RobotConfig Config0_2_c0;
     static RobotConfig Config1_2_c0;
     static RobotConfig Config1_2_c1;
-    // static RobotConfig Config1_2_b1;
-    // static RobotConfig Config1_2_b0;
+
 
     static double TM_c0_2_g[16];
 
@@ -225,24 +209,16 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
     static int stanceID[3]{1,5,3};
 
     static double bodyVelStart[2];// z and x direction
-    //  static double bodyVelEnd[2];
     static double bodyAcc[2];
     static double bodyVelDes[2];
     static double bodyVelDes_2_c[2];
     static bool isTD[3]={false,false,false};
+
     static double legHeight{0.1};
-    //   static double HeightAdj_c1_2_c0;
 
 
+    //***sending for map update***//
 
-    //    rt_printf("count %d\n",param.count);
-    //if(param.count%10==0)
-    // if(isVisionUsed==true)
-
-
-    //sending for map update
-
-    //    if(FlagV==FlagVision::Free)
     if(param.count%300==0)
     {
         ScanningInfo sendInfo;
@@ -252,6 +228,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
         rt_printf("visionCommand Sending...\n");
     }
 
+    //*** update map**//
     if(param.count%100==0)
     {
         if(FlagV==FlagVision::Free)
@@ -263,16 +240,10 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             //rt_printf("map   is : %f %f\n",gridMap[200][200],gridMap[300][200]);
         }
         else
-            rt_printf("vision is scanning ,could not update map...........................................................\n");
+            rt_printf("vision is scanning ,could not update map.....\n");
     }
-    //    if(param.count%100==0)
-    //    {
-    //        rt_printf("flag %d\n",FlagV);
-    //        rt_printf("map buff  is : %f %f\n",gridMapBuff[200][200],gridMapBuff[300][200]);
-    //        rt_printf("map   is : %f %f\n",gridMap[200][200],gridMap[300][200]);
-    //    }
 
-
+    //*** gait state machine begins***//
     switch(gaitState)
     {
     case GaitState::None:
@@ -287,7 +258,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
         swingCount=int(param.totalCount/dutyFactor*(1-dutyFactor));
         stanceCount=param.totalCount;
 
-        if(stepCount==0) //update vision and imu to update this configuration and compute the next configuration
+        if(stepCount==0) //apply vision and imu to update this configuration and compute the next configuration
         {
             param.d+=-dDist;
             param.l+=-dLateral;
@@ -296,8 +267,6 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             legHeight=stepHeight;
 
             rt_printf("/////////////////current step started!//////////////////////////////\n");
-
-
             rt_printf("A new step begins...swingID %d %d %d\n",swingID[0],swingID[1],swingID[2]);
             rt_printf("one pair leg step Count %d\n",stanceCount);
             rt_printf("Param!!!!!!\nwalk d %f,\n walk lateral %f,\n walk b %f \n pitch p %f\n body elevation %f\n legheigh %f\n",param.d,param.l,param.b,dPitch,bodyElevation,param.h);
@@ -314,35 +283,46 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             euler[2]=asin(sin(euler[2]));//pitch
 
             //pitch is minus when moving forward
+
+            //*** adjust leg distribution ***//
+            double alpha;
+            alpha=2;
+            double limit;
+            limit=10/180*PI;
+
             if(euler[2]<0)
             {
-                stdLegPee2B[6]=-0.35-0.2*abs(sin(euler[2]));
-                stdLegPee2B[15]=0.35+0.2*abs(sin(euler[2]));
-                stdLegPee2C[6]=-0.35-0.2*abs(sin(euler[2]));
-                stdLegPee2C[15]=0.35+0.2*abs(sin(euler[2]));
+                stdLegPee2C[0]=-0.33;
+                stdLegPee2C[9]=0.33;
+
+                stdLegPee2C[6]=-0.33-alpha*abs(sin(euler[2]));
+                stdLegPee2C[15]=0.33+alpha*abs(sin(euler[2]));
 
 
-                stdLegPee2B[0]=-0.35;
-                stdLegPee2B[9]=0.35;
-                stdLegPee2C[0]=-0.35;
-                stdLegPee2C[9]=0.35;
+                if(euler[2]<-limit)
+                {
+                    stdLegPee2C[6]=-0.33-alpha*abs(sin(limit));
+                    stdLegPee2C[15]=0.33+alpha*abs(sin(limit));
+                }
 
             }
             else
             {
-                stdLegPee2B[6]=-0.35;
-                stdLegPee2B[15]=0.35;
-                stdLegPee2C[6]=-0.35;
-                stdLegPee2C[15]=0.35;
 
-                stdLegPee2B[0]=-0.35-0.2*abs(sin(euler[2]));
-                stdLegPee2B[9]=0.35+0.2*abs(sin(euler[2]));
-                stdLegPee2C[0]=-0.35-0.2*abs(sin(euler[2]));
-                stdLegPee2C[9]=0.35+0.2*abs(sin(euler[2]));
+                stdLegPee2C[0]=-0.33-alpha*abs(sin(euler[2]));
+                stdLegPee2C[9]=0.33+alpha*abs(sin(euler[2]));
+
+                stdLegPee2C[6]=-0.33;
+                stdLegPee2C[15]=0.33;
+
+                 if(euler[2]>limit)
+                {
+                    stdLegPee2C[0]=-0.33-alpha*abs(sin(limit));
+                    stdLegPee2C[9]=0.33+alpha*abs(sin(limit));
+                }
+
             }
 
-            stdLegPee2B[5]=0.1*sin(euler[2]);
-            stdLegPee2B[14]=0.1*sin(euler[2]);
             stdLegPee2C[5]=0.1*sin(euler[2]);
             stdLegPee2C[14]=0.1*sin(euler[2]);
 
@@ -350,14 +330,11 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             for (int i=0;i<6;i++)
                 rt_printf("%f %f %f\n",stdLegPee2C[i*3],stdLegPee2C[i*3+1],stdLegPee2C[i*3+2]);
 
-
-
-
-            //in this scheduling scheme, the body is set on the waist
+            //***in this scheduling scheme, the body is set on the waist***//
             RobotConfig Config0_2_b0;
             robot.GetWa(waistStart);
             waistStart=asin(sin(waistStart));
-            double b0_2_s0[6];//"231"
+            double b0_2_s0[6];//"231" euler angles
             memset(b0_2_s0,0,sizeof(double)*6);
             b0_2_s0[5]=waistStart;
             double TM_b0_2_s0[16];
@@ -447,12 +424,6 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             c1_2_c0[4]=0;
             c1_2_c0[5]=0;
 
-
-            //            if(dPitch!=0 )
-            //            {
-            //                c1_2_c0[5]=dPitch;
-            //                dPitch=0;
-            //             }
 
             aris::dynamic::s_pe2pm(c1_2_c0,TM_c1_2_c0,"231");
             aris::dynamic::s_inv_pm(TM_c1_2_c0,TM_c0_2_c1);
@@ -548,12 +519,9 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             for(int i=0;i<4;i++)
                 rt_printf(" %f %f %f %f\n",TM_c1_2_c0[i*4+0],TM_c1_2_c0[i*4+1],TM_c1_2_c0[i*4+2],TM_c1_2_c0[i*4+3]);
 
-
             //stance legs 2 c0
             for(int i=0;i<3;i++)
                 memcpy(&Config1_2_c0.LegPee[stanceID[i]*3],&Config0_2_c0.LegPee[stanceID[i]*3],sizeof(double)*3);
-
-
 
             //swing legs 2 c0
             double SW_2_c1[9];
@@ -744,7 +712,9 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             aris::dynamic::s_pm2pe(TM_c1_2_g0,c1_2_g0,"231");
             //rt_printf("c1_2_g0  %f %f %f \n",b1_2_g0[3],b1_2_g0[4],b1_2_g0[5]);
 
-            waistEnd=asin(sin(c1_2_g0[5]));//+adjPitch;//decrease the angle
+            // c1_2_g0, this is the c1 absolute angle to ground
+//            waistEnd=asin(sin(c1_2_g0[5]));
+            waistEnd=asin(sin(c1_2_g0[5]));
 
 
             // body 2 c0  -->ok for RobotIX
@@ -1263,49 +1233,49 @@ void parseAdjustSlope(const std::string &cmd, const std::map<std::string, std::s
         if(i.first =="forward")
         {
             dDist+=0.04;
- 
+
         }
         else if (i.first == "backward")
         {
             dDist-=0.04;
- 
+
         }
         else if(i.first =="turnleft")
         {
             dAngle+=0.04;
- 
+
         }
         else if (i.first == "turnright")
         {
             dAngle-=0.04;
- 
+
         }
         else if(i.first =="left")
         {
             dLateral+=0.04;
- 
+
         }
         else if (i.first == "right")
         {
             dLateral-=0.04;
- 
+
         }
         else if (i.first == "bodyHeight")
         {
             bodyElevation=std::stod(i.second);
- 
+
         }
         else if (i.first == "legHeight")
         {
 
             stepHeight=std::stod(i.second);
- 
+
         }
         else if (i.first == "stop")
         {
             gaitCommand=GaitCommand::Stop;
             cout<<"stop command received !"<<endl;
- 
+
         }
         else if (i.first == "totalCount")
         {
@@ -1424,7 +1394,7 @@ bool SetScrewLimits(double* ScrewIn,double* ScrewInFinal)
 GaitGenerator::GaitGenerator()
 {
 
- }
+}
 
 void GaitGenerator::LegsTransform(const double *LegPee, const double *TM, double *LegPeeTranformed)
 {
@@ -1887,8 +1857,6 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
     static RobotConfig Config0_2_c0;
     static RobotConfig Config1_2_c0;
     static RobotConfig Config1_2_c1;
-    // static RobotConfig Config1_2_b1;
-    // static RobotConfig Config1_2_b0;
 
     static double TM_c0_2_g[16];
 
@@ -1905,22 +1873,13 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
     static bool isMidTD[2]={false,false};
     static double legHeight{0.1};
 
-    const double stdLeg2B[18]=
-    {  -0.25,-0.99,-0.575,
-       -0.475,-0.99,0,
-       -0.25,-0.99,0.575,
-       0.25,-0.99,-0.575,
-       0.475,-0.99,0,
-       0.25,-0.99,0.575
-    };
-
-    const double stdLeg2C[18]=
-    {  -0.25,-0,-0.575,
+    static double stdLeg2C[18]=
+    {  -0.33,-0,-0.575,
        -0.475,-0,0,
-       -0.25,-0,0.575,
-       0.25,-0,-0.575,
+       -0.33,-0,0.575,
+       0.33,-0,-0.575,
        0.475,-0,0,
-       0.25,-0,0.575
+       0.33,-0,0.575
     };
 
     switch(gaitState)
@@ -1947,7 +1906,6 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
 
         if(stepCount==0) //update vision and imu to update this configuration and compute the next configuration
         {
-
             param.d+=-dDist;
             param.l+=-dLateral;
             param.b+=dAngle;
@@ -1955,7 +1913,6 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
             legHeight=stepHeight;
 
             rt_printf("/////////////////current step started!//////////////////////////////\n");
-
 
             rt_printf("A new step begins...swingID  %d %d\n",swingID[0],swingID[1]);
             rt_printf("one pair leg step Count %d\n",stepHalfTotalCount);
@@ -1972,6 +1929,50 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
             euler[0]=0;// yaw being zero
             euler[1]=asin(sin(euler[1]));
             euler[2]=asin(sin(euler[2]));//pitch
+
+
+            //*** adjust leg distribution ***//
+            double alpha;
+            alpha=2;
+            double limit;
+            limit=10/180*PI;
+
+            if(euler[2]<0)
+            {
+                stdLeg2C[0]=-0.33;
+                stdLeg2C[9]=0.33;
+
+                stdLeg2C[6]=-0.33-alpha*abs(sin(euler[2]));
+                stdLeg2C[15]=0.33+alpha*abs(sin(euler[2]));
+
+
+                if(euler[2]<-limit)
+                {
+                    stdLeg2C[6]=-0.33-alpha*abs(sin(limit));
+                    stdLeg2C[15]=0.33+alpha*abs(sin(limit));
+                }
+
+            }
+            else
+            {
+
+                stdLeg2C[0]=-0.33-alpha*abs(sin(euler[2]));
+                stdLeg2C[9]=0.33+alpha*abs(sin(euler[2]));
+
+                stdLeg2C[6]=-0.33;
+                stdLeg2C[15]=0.33;
+
+                 if(euler[2]>limit)
+                {
+                    stdLeg2C[0]=-0.33-alpha*abs(sin(limit));
+                    stdLeg2C[9]=0.33+alpha*abs(sin(limit));
+                }
+
+            }
+
+            stdLeg2C[5]=0.1*sin(euler[2]);
+            stdLeg2C[14]=0.1*sin(euler[2]);
+
 
             //in this scheduling scheme, the body is set on the waist
             RobotConfig Config0_2_b0;
@@ -2369,9 +2370,6 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
                 for(int i=0;i<2;i++)
                 {
                     g.TrajEllipsoid(&Config0_2_c0.LegPee[middleID[i]*3],&Config1_2_c0.LegPee[middleID[i]*3],stepCount-stanceCount1+1,swingCount2,legHeight,&midLegPee2c0[i*3]);
-                    //                    rt_printf("mid pos  %f %f %f\n",midLegPee2c0[0],midLegPee2c0[1],midLegPee2c0[2]);
-                    //                   rt_printf("mid pos  %f %f %f\n",midLegPee2c0[3],midLegPee2c0[4],midLegPee2c0[5]);
-
                 }
             }
             else
@@ -2532,7 +2530,7 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
         return 1;
 
     case GaitState::End:
-          gaitState=GaitState::None;
+        gaitState=GaitState::None;
         memset(bodyVelStart,0,sizeof(double)*2);
         rt_printf("step end\n");
         stepNumFinished=0;

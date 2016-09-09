@@ -81,21 +81,14 @@ void parseIMU(const std::string &cmd, const std::map<std::string, std::string> &
 void parseVision(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
 void parsePitch(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
 void parseGoSlope35(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
+void parseGoSlopeVisionFast2(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
+
+int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &param_in);
+int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &param_in);
 
 bool SetScrewLimits(double* plannedIn,double* changedIn);
+void updateSTDLeg2C(double* euler,double * stdLegPee2c);
 
-  void parseGoSlopeVisionFast2(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
-
-void parseGoSlopeHuman(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
-void parseGoSlopeFast(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
-
-int GoSlopeByVision(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &param_in);
-int GoSlopeByVision2(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &param_in);
-int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &param_in);
-
-int GoSlopeByHuman(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &param_in);
-int GoSlopeFast(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &param_in);
-int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &param_in);
 
 struct RobotConfig
 {
