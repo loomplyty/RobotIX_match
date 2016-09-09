@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
     ForceTask::ForceWalk forcewalker;
 	std::string xml_address;
 
-    velodyne1.Start();
+//    velodyne1.Start();
 
     PassStepDitch::adjustWrapper.AdjustStart();
 

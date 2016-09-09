@@ -769,14 +769,16 @@
                     <distance abbreviation="d" type="double" default="0"/>
                     <lateral abbreviation="l" type="double" default="0"/>
                     <mode abbreviation="m" type="int" default="1"/>
-                  </wks_param>
+                    <totalCount abbreviation="t" type="int" default="3000"/>  
+                </wks_param>
             </gsvf2>
             <gs35 default="wks_param">
                 <wks_param type="group">
                     <distance abbreviation="d" type="double" default="0"/>
                     <lateral abbreviation="l" type="double" default="0"/>
                     <mode abbreviation="m" type="int" default="1"/>
-                  </wks_param>
+                    <totalCount abbreviation="t" type="int" default="3000"/>
+                 </wks_param>
             </gs35>
             <pitch default="pitch_param">
                 <pitch_param type="group">
@@ -1020,5 +1022,5 @@
     <Sensors>
         <IMU active="true" type="xsens_imu" portLinux="/dev/ttyUSB0" baudRate="921600" sampleRate="400" PeImuGround2BodyGound="{0,0,0,PI,PI/2,3*PI/2}" PeImu2Body="{0,0,0,0,PI/2,PI/2}"/>
     </Sensors>
-    <UDP remote_ip="192.168.2.102" remote_port="6661" local_port="6660"/>
+    <UDP remote_ip="192.168.2.101" remote_port="6661" local_port="6660"/>
 </RobotIX>

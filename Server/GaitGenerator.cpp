@@ -9,7 +9,6 @@ namespace VersatileGait
 {
 //atomic_bool isSlopeStopped(false);
 
-
 aris::control::Pipe<VersatileGait::ScanningInfo> visionSlopePipe(true);
 atomic_bool isScanningFinished{false};
 //atomic_bool isUsingGridMap{false};
@@ -57,10 +56,11 @@ static bool isVisionUsed=false;
 static double TDextend=0.07;
 static double dPitch=0;
 static double bodyElevation=0.975;
-static double stepHeight=0.1;
+static double stepHeight=0.075;
 static double dutyFactor{0.625};
-static int stepHalfTotalCount{2500};//half period
+static int stepHalfTotalCount{2000};//half period
 static double pitchAdjFactor{0.7};
+
 aris::control::Pipe<robotData> logPipe(true);
 
 
@@ -132,7 +132,6 @@ void updateSTDLeg2C(double * euler,double * stdLegPee2c)
 
 }
 
-
 void parseGoSlopeVisionFast2(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg)
 {
     WalkGaitParams param;
@@ -147,6 +146,11 @@ void parseGoSlopeVisionFast2(const std::string &cmd, const std::map<std::string,
         {
             param.l=stod(i.second);
         }
+        else if (i.first == "totalCount")
+        {
+           param.totalCount=stoi(i.second);
+        }
+
         else if (i.first == "mode")
         {
             param.m= stoi(i.second);
@@ -178,10 +182,10 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
     static double stdLegPee2C[18]=
     {  -0.33,0,-0.575,
-       -0.45,0,0,
+       -0.425,0,0,
        -0.33,0,0.575,
        0.33,0,-0.575,
-       0.45,0,0,
+       0.425,0,0,
        0.33,0,0.575
     };
 
@@ -286,12 +290,13 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
             //*** adjust leg distribution ***//
             double alpha;
-            alpha=2;
+            alpha=3;
             double limit;
-            limit=10/180*PI;
+            limit=8.0/180*PI;
 
             if(euler[2]<0)
             {
+                rt_printf("pitch! ! ! %f\n",euler[2]);
                 stdLegPee2C[0]=-0.33;
                 stdLegPee2C[9]=0.33;
 
@@ -731,9 +736,9 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
 
             aris::dynamic::s_pm_dot_pnt(TM_c1_2_c0,body_2_c1,body_2_c0);
-//            body_2_c0[3]=c1_2_c0[3];
-//            body_2_c0[4]=c1_2_c0[4];
-//            body_2_c0[5]=c1_2_c0[5];
+            body_2_c0[3]=c1_2_c0[3];
+            body_2_c0[4]=c1_2_c0[4];
+            body_2_c0[5]=c1_2_c0[5]-asin(sin(c1_2_g0[5]))*(1-pitchAdjFactor);
             memcpy(&Config1_2_c0.BodyPee,body_2_c0,sizeof(double)*6);
 
 
@@ -1277,11 +1282,6 @@ void parseAdjustSlope(const std::string &cmd, const std::map<std::string, std::s
             cout<<"stop command received !"<<endl;
 
         }
-        else if (i.first == "totalCount")
-        {
-            stepHalfTotalCount=std::stoi(i.second);
-            break;
-        }
         else
         {
             std::cout<<"parse failed"<<std::endl;
@@ -1607,11 +1607,10 @@ void GaitGenerator::GetBodyOffset(const double pitch, const double roll, double*
 }
 void GaitGenerator::GetBodyOffsetRobotIX(const double pitch, const double roll, double* offset)
 {
-
     // only for test
     offset[0]=bodyElevation*sin(roll);
     offset[1]=0.0;
-    offset[2]=(-bodyElevation-0.2)*tan(pitch);// not sure depend on robot elevation
+    offset[2]=(-bodyElevation-0.3)*tan(pitch);// not sure depend on robot elevation
     rt_printf("offset %f %f %f\n",offset[0],offset[1],offset[2]);
 }
 void GaitGenerator::GetPlaneFromStanceLegs(const double *stanceLegs, double *normalVector)
@@ -1915,7 +1914,7 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
             rt_printf("/////////////////current step started!//////////////////////////////\n");
 
             rt_printf("A new step begins...swingID  %d %d\n",swingID[0],swingID[1]);
-            rt_printf("one pair leg step Count %d\n",stepHalfTotalCount);
+            
 
             rt_printf("Param!!!!!!\nwalk d %f,\n walk lateral %f,\n walk b %f \n pitch p %f\n body elevation %f\n legheigh %f\n",param.d,param.l,param.b,dPitch,bodyElevation,param.h);
 
@@ -1933,9 +1932,9 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
 
             //*** adjust leg distribution ***//
             double alpha;
-            alpha=2;
+            alpha=3;
             double limit;
-            limit=10/180*PI;
+            limit=8.0/180*PI;
 
             if(euler[2]<0)
             {
@@ -2139,9 +2138,9 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
 
 
             aris::dynamic::s_pm_dot_pnt(TM_c1_2_c0,body_2_c1,body_2_c0);
-//            body_2_c0[3]=c1_2_c0[3];
-//            body_2_c0[4]=c1_2_c0[4];
-//            body_2_c0[5]=c1_2_c0[5];
+            body_2_c0[3]=c1_2_c0[3];
+            body_2_c0[4]=c1_2_c0[4];
+            body_2_c0[5]=c1_2_c0[5]-asin(sin(c1_2_g0[5]))*(1-pitchAdjFactor);
             memcpy(&Config1_2_c0.BodyPee,body_2_c0,sizeof(double)*6);
 
 
@@ -2559,6 +2558,10 @@ void parseGoSlope35(const std::string &cmd, const std::map<std::string, std::str
         else if (i.first == "mode")
         {
             param.m= stoi(i.second);
+        }
+        else if (i.first =="totalCount")
+        {
+           param.totalCount= stoi(i.second);
         }
     }
     msg.copyStruct(param);
