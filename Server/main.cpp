@@ -19,7 +19,6 @@ using namespace std;
 #include "Move_Gait.h"
 
 // TY gait
-#include "Vision_Gait0.h"
 #include "Kinect2.h"
 //#include "Kinect2Test.h"
 #include "GaitGenerator.h"
@@ -34,13 +33,23 @@ using namespace std;
 #include "PassStepDitch.h"
 #include "Calibration.h"
 #include "TreePass.h"
+#include "UpOneSep.h"
 
-Kinect2Sensor::KINECT2 kinect2;
+// LJM gait
+#include "cross_chasm.h"
 
 int main(int argc, char *argv[])
 {
     ForceTask::ForceWalk forcewalker;
 	std::string xml_address;
+
+    velodyne1.Start();
+
+    PassStepDitch::adjustWrapper.AdjustStart();
+
+    Calibration::calibrationWrapper.CalibrationStart();
+    
+    TreePass::treePassWrapper.TreePassStart();
 
     if (argc <= 1)
     {
@@ -105,12 +114,24 @@ int main(int argc, char *argv[])
     rs.addCmd("sdwk", PassStepDitch::adjustWrapper.PassStepDitchParse, PassStepDitch::adjustWrapper.PassStepDitchGait);
     rs.addCmd("ssdwk", PassStepDitch::adjustWrapper.StopPassStepDitchParse, PassStepDitch::adjustWrapper.PassStepDitchGait);
     rs.addCmd("ca", Calibration::calibrationWrapper.visionCalibrateParse, Calibration::calibrationWrapper.visionCalibrate);
+    rs.addCmd("cap", Calibration::calibrationWrapper.captureParse, nullptr);
     rs.addCmd("up", parseMoveWithupstairs, moveupstairs);
     rs.addCmd("dw", parseMoveWithdownstairs, movedownstairs);
 
     // ZY's gait
     rs.addCmd("twk", TreePass::treePassWrapper.TreePassParse, TreePass::treePassWrapper.TreePaseWalk);
     rs.addCmd("swk", TreePass::treePassWrapper.StopTreePassParse, TreePass::treePassWrapper.TreePaseWalk);
+
+    // LJM gait cmds
+    rs.addCmd("cc", crossChasmParse, crossChasmGait);
+
+//    rs.addCmd("up25", ParseUp25Step, Up25StepGait);
+    rs.addCmd("up25", ParseUp25Step, Up25StepTwoTwoGait);
+    rs.addCmd("up15", ParseUp15Step, Up15StepGait);
+//    rs.addCmd("dw25", ParseDown25Step, Down25StepGait);
+//    rs.addCmd("dw15", ParseDown15Step, Down15StepGait);
+
+    rs.addCmd("mr",parseMoveWithRotate,moveWithRotate);
     // XYL gait initializations
     Rofo::RofoWalkInit();
 

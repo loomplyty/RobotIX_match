@@ -57,7 +57,7 @@ static bool isVisionUsed=false;
 static double TDextend=0.07;
 static double dPitch=0;
 static double bodyElevation=0.975;
-static double stepHeight=0.065;
+static double stepHeight=0.1;
 static double dutyFactor{0.625};
 static int stepHalfTotalCount{2500};//half period
 
@@ -168,8 +168,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
 
 
-    //param.b+=dAngle;
-    static aris::dynamic::FloatMarker beginMak{robot.ground()};
+     static aris::dynamic::FloatMarker beginMak{robot.ground()};
     static aris::dynamic::FloatMarker InitMak{robot.body()};
 
     static int stepNumFinished=0;
@@ -231,7 +230,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
     static double bodyVelDes[2];
     static double bodyVelDes_2_c[2];
     static bool isTD[3]={false,false,false};
-
+    static double legHeight{0.1};
     //   static double HeightAdj_c1_2_c0;
 
 
@@ -284,11 +283,9 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
         int swingCount;
         int stanceCount;
-//        swingCount=param.totalCount*2*(1-dutyFactor);
-//        stanceCount=param.totalCount*2*dutyFactor;
-        swingCount=int(stepHalfTotalCount*2*(1-dutyFactor));
-        stanceCount=stepHalfTotalCount;//half period
 
+        swingCount=int(param.totalCount/dutyFactor*(1-dutyFactor));
+        stanceCount=param.totalCount;
 
         if(stepCount==0) //update vision and imu to update this configuration and compute the next configuration
         {
@@ -296,6 +293,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             param.l+=-dLateral;
             param.b+=dAngle;
             param.h=stepHeight;
+            legHeight=stepHeight;
 
             rt_printf("/////////////////current step started!//////////////////////////////\n");
 
@@ -437,7 +435,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             // first, use only the current ground, in which c0  coicide with the assumd ground
             //body velocity
 
-            \
+            
             double TM_c1_2_c0[16];
             double TM_c0_2_c1[16];
 
@@ -878,7 +876,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             //normal traj
             for(int i=0;i<3;i++)
             {
-                g.TrajEllipsoid(&Config0_2_c0.LegPee[swingID[i]*3],&Config1_2_c0.LegPee[swingID[i]*3],stepCount+1,swingCount,param.h,&swLegPee2c0[i*3]);
+                g.TrajEllipsoid(&Config0_2_c0.LegPee[swingID[i]*3],&Config1_2_c0.LegPee[swingID[i]*3],stepCount+1,swingCount,legHeight,&swLegPee2c0[i*3]);
             }
         }
         else
@@ -1122,8 +1120,6 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
         return 1;
 
     case GaitState::End:
-        //        dDist=0;
-        //        dAngle=0;
         gaitState=GaitState::None;
         memset(bodyVelStart,0,sizeof(double)*2);
         rt_printf("step end\n");
@@ -1267,54 +1263,49 @@ void parseAdjustSlope(const std::string &cmd, const std::map<std::string, std::s
         if(i.first =="forward")
         {
             dDist+=0.04;
-            break;
+ 
         }
         else if (i.first == "backward")
         {
             dDist-=0.04;
-            break;
+ 
         }
         else if(i.first =="turnleft")
         {
             dAngle+=0.04;
-            break;
+ 
         }
         else if (i.first == "turnright")
         {
             dAngle-=0.04;
-            break;
+ 
         }
         else if(i.first =="left")
         {
             dLateral+=0.04;
-            break;
+ 
         }
         else if (i.first == "right")
         {
             dLateral-=0.04;
-            break;
+ 
         }
         else if (i.first == "bodyHeight")
         {
             bodyElevation=std::stod(i.second);
-            break;
+ 
         }
         else if (i.first == "legHeight")
         {
 
             stepHeight=std::stod(i.second);
-            break;
-        }
-        else if (i.first == "factor")
-        {
-            dutyFactor=std::stod(i.second);
-            break;
+ 
         }
         else if (i.first == "stop")
         {
             gaitCommand=GaitCommand::Stop;
             cout<<"stop command received !"<<endl;
-            break;
+ 
         }
         else if (i.first == "totalCount")
         {
@@ -1870,7 +1861,6 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
     WalkGaitParams param;
     memcpy(&param,&Param,sizeof(param));
 
-    //param.b+=dAngle;
     static aris::dynamic::FloatMarker beginMak{robot.ground()};
     static aris::dynamic::FloatMarker InitMak{robot.body()};
 
@@ -1887,8 +1877,9 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
         isStepFinished=false;
 
         dDist=0;
-        dAngle=0;
+
         dLateral=0;
+        dAngle=0;
     }
 
     static double waistStart;
@@ -1912,23 +1903,24 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
     static double bodyVelDes_2_c[2];
     static bool isTD[2]={false,false};
     static bool isMidTD[2]={false,false};
+    static double legHeight{0.1};
 
     const double stdLeg2B[18]=
-    {  -0.25,-0.99,-0.55,
+    {  -0.25,-0.99,-0.575,
        -0.475,-0.99,0,
-       -0.25,-0.99,0.55,
-       0.25,-0.99,-0.55,
+       -0.25,-0.99,0.575,
+       0.25,-0.99,-0.575,
        0.475,-0.99,0,
-       0.25,-0.99,0.55
+       0.25,-0.99,0.575
     };
 
     const double stdLeg2C[18]=
-    {  -0.25,-0,-0.55,
+    {  -0.25,-0,-0.575,
        -0.475,-0,0,
-       -0.25,-0,0.55,
-       0.25,-0,-0.55,
+       -0.25,-0,0.575,
+       0.25,-0,-0.575,
        0.475,-0,0,
-       0.25,-0,0.55
+       0.25,-0,0.575
     };
 
     switch(gaitState)
@@ -1946,17 +1938,11 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
         double ratio;
         ratio=0.6;
 
-        stanceCount1=stepHalfTotalCount;
-        swingCount1=int(stepHalfTotalCount*2*(1-dutyFactor));
 
-        swingCount2=int(stepHalfTotalCount*2*(1-dutyFactor))*ratio;
-        stanceCount2=swingCount2+stanceCount1-swingCount1;
-
-
-//        swingCount1=param.totalCount*2*(1-dutyFactor);
-//        stanceCount1=param.totalCount*2*dutyFactor;
-//        swingCount2=param.totalCount*2*(1-dutyFactor)*ratio;
-//        stanceCount2=param.totalCount*2*dutyFactor;
+        swingCount1=int(param.totalCount/dutyFactor*(1-dutyFactor));
+        stanceCount1=param.totalCount;
+        swingCount2=int(ratio*swingCount1);
+        stanceCount2=stanceCount1;
 
 
         if(stepCount==0) //update vision and imu to update this configuration and compute the next configuration
@@ -1966,6 +1952,7 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
             param.l+=-dLateral;
             param.b+=dAngle;
             param.h=stepHeight;
+            legHeight=stepHeight;
 
             rt_printf("/////////////////current step started!//////////////////////////////\n");
 
@@ -2108,7 +2095,8 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
             for(int i=0;i<2;i++)
             {
                 memcpy(&MID_2_c1[i*3],&stdLeg2C[middleID[i]*3],sizeof(double)*3);
-                MID_2_c1[i*3+2]+=lstraight/2;
+
+                MID_2_c1[i*3+0]+=lstraight/2;
                 MID_2_c1[i*3+2]+=dstraight/2;
                 aris::dynamic::s_pm_dot_pnt(TM_c1_2_c0,&MID_2_c1[i*3],&MID_2_c0[i*3]);
                 memcpy(&Config1_2_c0.LegPee[middleID[i]*3],&MID_2_c0[i*3],sizeof(double)*3);
@@ -2263,7 +2251,7 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
                 //normal traj
                 for(int i=0;i<2;i++)
                 {
-                    g.TrajEllipsoid(&Config0_2_c0.LegPee[swingID[i]*3],&Config1_2_c0.LegPee[swingID[i]*3],stepCount+1,swingCount1,param.h,&swLegPee2c0[i*3]);
+                    g.TrajEllipsoid(&Config0_2_c0.LegPee[swingID[i]*3],&Config1_2_c0.LegPee[swingID[i]*3],stepCount+1,swingCount1,legHeight,&swLegPee2c0[i*3]);
                 }
             }
             else
@@ -2380,7 +2368,7 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
                 //normal traj
                 for(int i=0;i<2;i++)
                 {
-                    g.TrajEllipsoid(&Config0_2_c0.LegPee[middleID[i]*3],&Config1_2_c0.LegPee[middleID[i]*3],stepCount-stanceCount1+1,swingCount2,param.h,&midLegPee2c0[i*3]);
+                    g.TrajEllipsoid(&Config0_2_c0.LegPee[middleID[i]*3],&Config1_2_c0.LegPee[middleID[i]*3],stepCount-stanceCount1+1,swingCount2,legHeight,&midLegPee2c0[i*3]);
                     //                    rt_printf("mid pos  %f %f %f\n",midLegPee2c0[0],midLegPee2c0[1],midLegPee2c0[2]);
                     //                   rt_printf("mid pos  %f %f %f\n",midLegPee2c0[3],midLegPee2c0[4],midLegPee2c0[5]);
 
@@ -2544,9 +2532,7 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
         return 1;
 
     case GaitState::End:
-        //        dDist=0;
-        //        dAngle=0;
-        gaitState=GaitState::None;
+          gaitState=GaitState::None;
         memset(bodyVelStart,0,sizeof(double)*2);
         rt_printf("step end\n");
         stepNumFinished=0;

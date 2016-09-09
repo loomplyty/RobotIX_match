@@ -792,11 +792,10 @@
                     <left abbreviation="a"/>
                     <right abbreviation="d"/>
                     <stop abbreviation="s"/>
-	            <bodyHeight abbreviation ="b" type="double" default="0.99"/>
-	            <legHeight abbreviation ="h" type="double" default="0.1"/>
-                    <factor abbreviation="f" type="double" default="0.6"/>
-                    <totalCount abbreviation="t" type="int" default="2500"/>
-                  </adj_param>
+                    <bodyHeight abbreviation ="b" type="double" default="0.99"/>
+                    <legHeight abbreviation ="h" type="double" default="0.1"/>
+                </adj_param>
+ 
             </adj>
             <frc default="force_param">
                 <force_param type="unique">
@@ -867,12 +866,49 @@
                   <alpha abbreviation="w" type="double" default="5.00"/>
                 </dw_param>
             </dw>
+            <cap/>
+            <mr>
+                 <mr_param type="group">
+                   <u abbreviation="u" type="double" default="0"/>
+                   <v abbreviation="v" type="double" default="0"/>
+                   <w abbreviation="w" type="double" default="0"/>
+                   <roll abbreviation="r" type="double" default="0"/>
+                   <pitch abbreviation="p" type="double" default="0"/>
+                   <yaw abbreviation="y" type="double" default="0"/>
+                   <totalCount abbreviation="t" type="double" default="3000"/>
+                 </mr_param>
+            </mr>
             <twk default="VISION_WALK_PARAM">
                  <VISION_WALK_PARAM type="group">
                  <orentation abbreviation="o" type="int" default="0"/>
                  </VISION_WALK_PARAM>
             </twk>
             <swk/>
+            <up25 default="up25_param">
+                 <up25_param type="group">
+                     <stepHeight abbreviation="s" type="double" default="0.25"/>
+                     <bodyHeight abbreviation="b" type="double" default="0.18"/>
+                     <normalHeight abbreviation="n" type="double" default="0.05"/>
+                 </up25_param>
+            </up25>
+            <up15 default="up15_param">
+                 <up15_param type="group">
+                     <stepHeight abbreviation="s" type="double" default="0.15"/>
+                     <bodyHeight abbreviation="b" type="double" default="0.10"/>
+                     <normalHeight abbreviation="n" type="double" default="0.05"/>
+                 </up15_param>
+            </up15>
+            <cc default="cc_param">
+                <cc_param type="group">
+                    <totalCount abbreviation="t" type="int" default="3000"/>
+                    <chasmWidth abbreviation="d" type="double" default="1"/>
+                    <stepHeight abbreviation="h" type="double" default="0.1"/>
+                    <dir_param type="unique" default="forward">
+                        <forward abbreviation="f"/>
+                        <backward abbreviation="b"/>
+                    </dir_param>
+                </cc_param>
+            </cc>
         </Commands>
     </Server>
     <Controller>
@@ -950,8 +986,8 @@
             </SlaveType>
             <Slave>
                 <Motion1  type="ElmoSoloWhistle" min_pos="0.738" max_pos="1.128" max_vel="0.9481" home_pos="0.738" input2count="11556181" kp="120" abs_id="11"/>
-                <Motion2  type="ElmoSoloWhistle" min_pos="0.722" max_pos="1.112" max_vel="0.9481" home_pos="0.72" input2count="11556181" kp="120" abs_id="9"/>
-                <Motion3  type="ElmoSoloWhistle" min_pos="0.738" max_pos="1.128" max_vel="0.9481" home_pos="0.74" input2count="11556181" kp="120" abs_id="10"/>
+                <Motion2  type="ElmoSoloWhistle" min_pos="0.722" max_pos="1.112" max_vel="0.9481" home_pos="0.722" input2count="11556181" kp="120" abs_id="9"/>
+                <Motion3  type="ElmoSoloWhistle" min_pos="0.738" max_pos="1.128" max_vel="0.9481" home_pos="0.738" input2count="11556181" kp="120" abs_id="10"/>
                 <Motion4  type="ElmoSoloWhistle" min_pos="0.738" max_pos="1.128" max_vel="0.9481" home_pos="0.738" input2count="11556181" kp="120" abs_id="14"/>
                 <Motion5  type="ElmoSoloWhistle" min_pos="0.722" max_pos="1.112" max_vel="0.9481" home_pos="0.722" input2count="11556181" kp="120" abs_id="12"/>
                 <Motion6  type="ElmoSoloWhistle" min_pos="0.738" max_pos="1.128" max_vel="0.9481" home_pos="0.738" input2count="11556181" kp="120" abs_id="13"/>
@@ -984,5 +1020,5 @@
     <Sensors>
         <IMU active="true" type="xsens_imu" portLinux="/dev/ttyUSB0" baudRate="921600" sampleRate="400" PeImuGround2BodyGound="{0,0,0,PI,PI/2,3*PI/2}" PeImu2Body="{0,0,0,0,PI/2,PI/2}"/>
     </Sensors>
-    <UDP remote_ip="192.168.2.101" remote_port="6661" local_port="6660"/>
+    <UDP remote_ip="192.168.2.102" remote_port="6661" local_port="6660"/>
 </RobotIX>
