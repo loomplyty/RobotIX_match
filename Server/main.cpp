@@ -25,6 +25,7 @@ using namespace std;
 
 // XYL gait
 #include "rofo4.h"
+#include "ForceRecover.h"
 
 // CX, ZYN, ZY's gait
 #include "Vision_Gait.h"
@@ -109,6 +110,7 @@ int main(int argc, char *argv[])
     rs.addCmd("climb",Rofo::rofoParse,   Rofo::rofoGait);
     rs.addCmd("edcl", Rofo::rofoEndParse,Rofo::rofoEndGait);
     rs.addCmd("ay",   Rofo::ayParse,     Rofo::ayGait);
+    rs.addCmd("rcf",  ForceRecoverParse, forceRecoverGait);
 
     // CX and ZYN's gait
     rs.addCmd("sdwk", PassStepDitch::adjustWrapper.PassStepDitchParse, PassStepDitch::adjustWrapper.PassStepDitchGait);
