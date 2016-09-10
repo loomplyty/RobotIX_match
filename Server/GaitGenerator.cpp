@@ -55,11 +55,11 @@ static bool isIMUUsed=false;
 static bool isVisionUsed=false;
 static double TDextend=0.07;
 static double dPitch=0;
-static double bodyElevation=0.975;
+static double bodyElevation=0.97;
 static double stepHeight=0.075;
 static double dutyFactor{0.625};
 static int stepHalfTotalCount{2000};//half period
-static double pitchAdjFactor{0.7};
+static double pitchAdjFactor{0.9};
 
 aris::control::Pipe<robotData> logPipe(true);
 
@@ -1610,7 +1610,7 @@ void GaitGenerator::GetBodyOffsetRobotIX(const double pitch, const double roll, 
     // only for test
     offset[0]=bodyElevation*sin(roll);
     offset[1]=0.0;
-    offset[2]=(-bodyElevation-0.3)*tan(pitch);// not sure depend on robot elevation
+    offset[2]=(-bodyElevation-0.2)*tan(pitch);// not sure depend on robot elevation
     rt_printf("offset %f %f %f\n",offset[0],offset[1],offset[2]);
 }
 void GaitGenerator::GetPlaneFromStanceLegs(const double *stanceLegs, double *normalVector)
