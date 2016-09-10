@@ -14,8 +14,8 @@ float TreePassWrapper::t_xDis=0.0f;  // x distacne between lidar and robot's ori
 float TreePassWrapper::t_yDis=0.70f;  // y distance between lidar and robot's origin
 float TreePassWrapper::t_n1=4.0f;    // first step number
 float TreePassWrapper::t_n2=3.0f;    // second step number
-int  TreePassWrapper::t_t1=1500;    // first step count
-int  TreePassWrapper::t_t2=1500;    // second step count
+int  TreePassWrapper::t_t1=1000;    // first step count
+int  TreePassWrapper::t_t2=1200;    // second step count
 bool TreePassWrapper::t_isPause=0;  // paus
 
 float TreePassWrapper::t_deltax=0.7f;
@@ -153,7 +153,7 @@ void TreePassWrapper::TreePassStart()
             float beta;
             treePassPipe.recvInNrt(a);
             std::cout<<"Passing Tree:"<<(int)treeNumber<<std::endl;
-            std::cout<<"phase: "<<(int)phase<<std::endl;
+            std::cout<<"case: "<<(int)phase<<std::endl;
             switch(phase)
             {
             case 0:
@@ -165,7 +165,7 @@ void TreePassWrapper::TreePassStart()
                 {
                     isFind=velodyne1.Update((t_x-t_deltax),(t_x+t_deltax),(t_d/2-t_y-t_yDis-t_deltay),(t_d/2-t_y-t_yDis+t_deltay),(t_z-t_deltaz),(t_z+t_deltaz),t_r,t_d);
                 }
-                isFind =1 ;
+                //isFind =1 ;
                 if(0==isFind)
                 {
                     isStop=1;
@@ -176,14 +176,20 @@ void TreePassWrapper::TreePassStart()
                 beta=generateAngle(obstacle.at(0).x+t_xDis, obstacle.at(0).y+t_yDis,obstacle.at(1).x+t_xDis,obstacle.at(1).y+t_yDis,1,2000);
                 if(beta>0.08)//((beta>0.04)&&(beta<0.08))//2.5'
                 {
-                    std::cout<<"pass case0!"<<std::endl;
+                    if(beta>0.35)
+                    {
+                        isStop=1;
+                        std::cout<<"Not Found! "<<beta/3.14*180<<" Beta too large!!"<<std::endl;
+                        break;
+                    }
+                    std::cout<<"in case0!"<<std::endl;
                     isGo=1;
                     break;
                 }
                 else
                 {
                     phase=1;
-                    std::cout<<"in case0!"<<std::endl;
+                    std::cout<<"pass case0!"<<std::endl;
                 }
             case 1:
                 std::cout<<"case1!"<<std::endl;
@@ -195,7 +201,7 @@ void TreePassWrapper::TreePassStart()
                 {
                     isFind=velodyne1.Update((t_x-t_deltax),(t_x+t_deltax),(t_d/2-t_y-t_yDis-t_deltay),(t_d/2-t_y-t_yDis+t_deltay),(t_z-t_deltaz),(t_z+t_deltaz),t_r,t_d);
                 }
-                isFind=1;
+                //isFind=1;
                 if(0==isFind)
                 {
                     isStop=1;
@@ -222,7 +228,7 @@ void TreePassWrapper::TreePassStart()
                 break;
             case 3:
                 std::cout<<"case3!"<<std::endl;
-                generateParam(0,0,0,1.5,4,2000);
+                generateParam(0,0,0,2.0,5,1200);
                 isGo=1;
                 treeNumber++;
                 break;
@@ -267,8 +273,12 @@ auto TreePassWrapper::TreePaseWalk(aris::dynamic::Model &model, const aris::dyna
     {
         isStop = false;
         phase=0;
-        m_targetPointX[2]={0};
-        m_targetPointY[2]={0};
+        //m_targetPointX[2]={0};
+        //m_targetPointY[2]={0};
+        m_targetPointX[0]=0;
+        m_targetPointX[1]=0;
+        m_targetPointY[0]=0;
+        m_targetPointY[1]=0;
         isGo = 0;
         treeNumber=0;
         visionTreePassParam.count = 0;
@@ -293,14 +303,14 @@ auto TreePassWrapper::TreePaseWalk(aris::dynamic::Model &model, const aris::dyna
             phase=(phase+1)%3;
             if((t_isPause)&&(0==phase))
             {
-                treeNumber=10;
+                treeNumber=11;
             }
 
-            if(treeNumber<9)
+            if(treeNumber<10)
             {
 
             }
-            else if(9 == treeNumber)
+            else if(10 == treeNumber)
             {
                 phase=3;
             }

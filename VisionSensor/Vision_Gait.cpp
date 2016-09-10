@@ -55,13 +55,16 @@ int moveWithRotate(aris::dynamic::Model &model, const aris::dynamic::PlanParamBa
 {
     auto &robot = static_cast<Robots::RobotTypeIII &>(model);
     auto &param = static_cast<const MoveRotateParam &>(param_in);
-
+    
+    static double beginWa;
     static double beginBodyPE213[6];
     static double pEE[18];
     if(param.count==0)
     {
+
         robot.GetPeb(beginBodyPE213,"213");
         robot.GetPee(pEE);
+        robot.GetWa(beginWa);
     }
 
     double realBodyPE213[6];
@@ -74,7 +77,7 @@ int moveWithRotate(aris::dynamic::Model &model, const aris::dynamic::PlanParamBa
     double pBody[6];
 
     robot.SetPeb(realBodyPE213,"213");
-    robot.SetWa(0);
+    robot.SetWa(beginWa);
     robot.SetPee(pEE);
 
     return param.totalCount - param.count - 1;

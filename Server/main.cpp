@@ -34,17 +34,18 @@ using namespace std;
 #include "PassStepDitch.h"
 #include "Calibration.h"
 #include "TreePass.h"
-#include "UpOneSep.h"
+#include "UpOneStep.h"
 
 // LJM gait
 #include "cross_chasm.h"
+#include "move_single_leg.h"
 
 int main(int argc, char *argv[])
 {
     ForceTask::ForceWalk forcewalker;
 	std::string xml_address;
 
-//    velodyne1.Start();
+    velodyne1.Start();
 
     PassStepDitch::adjustWrapper.AdjustStart();
 
@@ -126,11 +127,12 @@ int main(int argc, char *argv[])
 
     // LJM gait cmds
     rs.addCmd("cc", crossChasmParse, crossChasmGait);
+    rs.addCmd("msl", moveSingleLegParse, moveSingleLegGait);
 
 //    rs.addCmd("up25", ParseUp25Step, Up25StepGait);
     rs.addCmd("up25", ParseUp25Step, Up25StepTwoTwoGait);
-    rs.addCmd("up15", ParseUp15Step, Up15StepGait);
-//    rs.addCmd("dw25", ParseDown25Step, Down25StepGait);
+//    rs.addCmd("up15", ParseUp15Step, Up15StepGait);
+    rs.addCmd("dw25", ParseDown25Step, Down25StepGait);
 //    rs.addCmd("dw15", ParseDown15Step, Down15StepGait);
 
     rs.addCmd("mr",parseMoveWithRotate,moveWithRotate);

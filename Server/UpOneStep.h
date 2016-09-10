@@ -1,5 +1,5 @@
-#ifndef UPONESEP_H
-#define UPONESEP_H
+#ifndef UPONESTEP_H
+#define UPONESTEP_H
 
 #include <aris.h>
 #include <Basic_Gait.h>
@@ -27,4 +27,4 @@ int Down25StepGait(aris::dynamic::Model &model, const aris::dynamic::PlanParamBa
 //void ParseDown15Step(const std::string &cmd, const map<std::string, std::string> &params, aris::core::Msg &msg);
 //int Down15StepGait(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &param_in);
 
-#endif // UPONESEP_H
+#endif // UPONESTEP_H

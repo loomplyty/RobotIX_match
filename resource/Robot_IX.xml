@@ -630,8 +630,8 @@
                     <second abbreviation="s"/>
                     <leg abbreviation="l" type="intArray" default="0"/>
                 </leg_param>
-                <t1 abbreviation="t" type="intArray" default="3000"/>
-                <t2 type="intArray" default="3000"/>
+                <t1 abbreviation="t" type="intArray" default="5000"/>
+                <t2 type="intArray" default="8000"/>
                 <margin_offset abbreviation="m" type="double" default="0.01"/>
                 <require_zero abbreviation="z" type="int" default="0"/>
                 <force_thr_y abbreviation="y" type="double" default="-120"/>
@@ -913,18 +913,18 @@
             <up25 default="up25_param">
                  <up25_param type="group">
                      <stepHeight abbreviation="s" type="double" default="0.25"/>
-                     <bodyHeight abbreviation="b" type="double" default="0.18"/>
+                     <bodyHeight abbreviation="b" type="double" default="1.13"/>
                      <normalHeight abbreviation="n" type="double" default="0.05"/>
                  </up25_param>
             </up25>
-            <up15 default="up15_param">
-                 <up15_param type="group">
-                     <stepHeight abbreviation="s" type="double" default="0.15"/>
-                     <bodyHeight abbreviation="b" type="double" default="0.10"/>
+            <dw25 default="dw25_param">
+                 <dw25_param type="group">
+                     <stepHeight abbreviation="s" type="double" default="0.25"/>
+                     <bodyHeight abbreviation="b" type="double" default="0.88"/>
                      <normalHeight abbreviation="n" type="double" default="0.05"/>
-                 </up15_param>
-            </up15>
-            <cc default="cc_param">
+                 </dw25_param>
+            </dw25>
+             <cc default="cc_param">
                 <cc_param type="group">
                     <totalCount abbreviation="t" type="int" default="3000"/>
                     <chasmWidth abbreviation="d" type="double" default="1"/>
@@ -935,6 +935,19 @@
                     </dir_param>
                 </cc_param>
             </cc>
+            <msl default="msl_param">
+                <msl_param type="group">
+                    <totalCount abbreviation="t" type="int" default="3000"/>
+                    <leg abbreviation="l" type="int" default="0"/>
+                    <x abbreviation="x" type="double" default="0"/>
+                    <y abbreviation="y" type="double" default="0"/>
+                    <z abbreviation="z" type="double" default="0"/>
+                    <dir_param type="unique" default="relative">
+                        <absolute abbreviation="a"/>
+                        <relative abbreviation="r"/>
+                    </dir_param>
+                </msl_param>
+            </msl>
         </Commands>
     </Server>
     <Controller>
@@ -1029,7 +1042,7 @@
                 <Motion16 type="ElmoSoloWhistle" min_pos="0.738" max_pos="1.128" max_vel="0.9481" home_pos="0.738" input2count="11556181" kp="120" abs_id="2"/>
                 <Motion17 type="ElmoSoloWhistle" min_pos="0.722" max_pos="1.112" max_vel="0.9481" home_pos="0.722" input2count="11556181" kp="120" abs_id="0"/>
                 <Motion18 type="ElmoSoloWhistle" min_pos="0.738" max_pos="1.128" max_vel="0.9481" home_pos="0.738" input2count="11556181" kp="120" abs_id="1"/>
-                <Motion19 type="ElmoSoloWhistle" min_pos="0.125" max_pos="0.358" max_vel="0.9481" home_pos="0.246" input2count="86671360" kp="120" abs_id="18" hm_with_switch="1"/>
+                <Motion19 type="ElmoSoloWhistle" min_pos="0.1479" max_pos="0.3367" max_vel="0.1260" home_pos="0.24622" input2count="86671360" kp="120" abs_id="18" hm_with_switch="1"/>
                 <SlaveStation1 type="EK1100" />
                 <Junction1 type="EK1122" />
                 <ForceSensor1 type="AtiForceSensor" abs_id="5"/>

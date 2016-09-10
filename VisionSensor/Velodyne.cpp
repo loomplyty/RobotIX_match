@@ -104,12 +104,10 @@ void VELODYNE::Start()
 {
     mVelodyneStruct->Init();
     cout<<"Device Open ! "<<endl;
-    int a;
     for (int i = 0; i < 7; i++)
     {
         UpdateO();
     }
-    SavePcd();
     cout<<"Clear !"<<endl;
 }
 
@@ -127,28 +125,30 @@ void VELODYNE::SavePcd()
 
 void VELODYNE::UpdateO()
 {
-   while(true)
-{
-CloudConstPtr rawCloud;
-if(mVelodyneStruct->cloud_mutex_.try_lock())
-{
-mVelodyneStruct->cloud_.swap(rawCloud);
-mVelodyneStruct->cloud_mutex_.unlock();
-}
-if(rawCloud)
-{
-cout<<"get data"<<endl;
-break;
-}
-}
+    while(true)
+    {
+        CloudConstPtr rawCloud;
+        if(mVelodyneStruct->cloud_mutex_.try_lock())
+        {
 
+            mVelodyneStruct->cloud_.swap(rawCloud);
+            mVelodyneStruct->cloud_mutex_.unlock();
+        }
+        if(rawCloud)
+        {
+            cout<<"Have got data"<<endl;
+            break;
+        }
+    }
 }
 
 int VELODYNE::Update(float xMin, float xMax, float yMin, float yMax, float zMin, float zMax,float r,float d)
 {
     vector<CloudPtr> obstacleCloud;
     obstacle.clear();
-    isFound[2]={0};
+    isFound[0]=0;
+    isFound[1]=0;
+    //isFound[2]={0};
     while(true)
     {
         CloudConstPtr rawCloud;
@@ -165,14 +165,28 @@ int VELODYNE::Update(float xMin, float xMax, float yMin, float yMax, float zMin,
             pcl::PointCloud<PointXYZ>::Ptr x_cloud_filtered (new pcl::PointCloud<PointXYZ>);
             pcl::PointCloud<PointXYZ>::Ptr z_cloud_filtered (new pcl::PointCloud<PointXYZ>);
             std::cout<<"Update Begin!"<<endl;
+            if(rawCloud->size()<3)
+            {
+                return 0;
+            }
             pass.setInputCloud (rawCloud);
             pass.setFilterFieldName ("y");
             pass.setFilterLimits (0,20);
             pass.filter (*m_rawCloud);
+
+            if(m_rawCloud->size()<3)
+            {
+                return 0;
+            }
             pass.setInputCloud (m_rawCloud);
             pass.setFilterFieldName ("x");
             pass.setFilterLimits (xMin, xMax);
             pass.filter (*x_cloud_filtered);
+
+            if(x_cloud_filtered->size()<3)
+            {
+                return 0;
+            }
             pass.setInputCloud (x_cloud_filtered);
             pass.setFilterFieldName ("z");
             pass.setFilterLimits (zMin, zMax);
@@ -184,25 +198,38 @@ int VELODYNE::Update(float xMin, float xMax, float yMin, float yMax, float zMin,
             {
                 pcl::PointCloud<PointXYZ>::Ptr y_cloud_filtered (new pcl::PointCloud<PointXYZ>);
 
+                if(z_cloud_filtered->size()<3)
+                {
+                    return 0;
+                }
                 pass.setInputCloud (z_cloud_filtered);
                 pass.setFilterFieldName ("y");
                 pass.setFilterLimits (d*i+yMin,d*i+yMax);
                 std::cout<<" ymin: "<<d*i+yMin<<" ymax: "<<d*i+yMax<<std::endl;
                 pass.filter (*y_cloud_filtered);
-                obstacleCloud.push_back(y_cloud_filtered);
-                if(y_cloud_filtered->size()>3)
+                if(y_cloud_filtered->size()>2)
+                {
                     isFound[i]=1;
-                std::cout<<"Phase1 "<<i<<": "<<"Found "<<y_cloud_filtered->size()<<" Points"<<endl;
+                    obstacleCloud.push_back(y_cloud_filtered);
+                    std::cout<<"Phase1 "<<i<<": "<<"Found "<<y_cloud_filtered->size()<<" Points"<<endl;
+                }
+                else
+                {
+                    isFound[i]=0;
+                    return 0;
+                }
             }
             std::cout<<"Phase 2 !"<<endl;
-            for(int i=0; i<2; i++)
+            int zy_i=0;
+            for(zy_i=0; zy_i<2; zy_i++)
             {
                 OBSTACLE_DATA temp;
                 temp.x=0;
                 temp.y=0;
                 temp.r=0;
-                if(1==isFound[i])
+                if(1==isFound[zy_i])
                 {
+                    /*
                     // 创建一个系数为X=Y=0,Z=1的平面
                     pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients ());
                     coefficients->values.resize (4);
@@ -211,7 +238,7 @@ int VELODYNE::Update(float xMin, float xMax, float yMin, float yMax, float zMin,
                     coefficients->values[2] = 1.0;
                     coefficients->values[3] = 0.0;
                     // 创建滤波器对象
-                    pcl::PointCloud<PointXYZ>::Ptr cloud_projected (new pcl::PointCloud<PointXYZ>);
+                    pcl::Poin`tCloud<PointXYZ>::Ptr cloud_projected (new pcl::PointCloud<PointXYZ>);
                     pcl::ProjectInliers<pcl::PointXYZ> proj;
                     proj.setModelType (pcl::SACMODEL_PLANE);
                     proj.setInputCloud (obstacleCloud.at(i));
@@ -219,25 +246,33 @@ int VELODYNE::Update(float xMin, float xMax, float yMin, float yMax, float zMin,
                     proj.setModelCoefficients (coefficients);
                     proj.filter (*cloud_projected);
                     std::cout<<"size: "<< cloud_projected->size()<<std::endl;
+                    */
                     //nearest point
                     int number=0;
-                    for(int i=0;i<cloud_projected->size();i++)
+                    float lastDis=100;
+                    float thisDis=0;
+                    for(int i=0;i<obstacleCloud.at(zy_i)->size();i++)
                     {
-                        static float lastDis=100;
-                        static float thisDis=0;
-                        thisDis = sqrt(cloud_projected->points[i].x*cloud_projected->points[i].x+cloud_projected->points[i].y*cloud_projected->points[i].y);
+                        //static float lastDis=100;
+                        //static float thisDis=0;
+                        //thisDis = sqrt(cloud_projected->points[i].x*cloud_projected->points[i].x+cloud_projected->points[i].y*cloud_projected->points[i].y);
+                        thisDis = sqrt(obstacleCloud.at(zy_i)->points[i].x*obstacleCloud.at(zy_i)->points[i].x+obstacleCloud.at(zy_i)->points[i].y*obstacleCloud.at(zy_i)->points[i].y);
                         if(thisDis<lastDis)
                         {
                             number = i;
+                            lastDis=thisDis;
                         }
-                        lastDis=thisDis;
                     }
                     //caculate circle
                     float distance = 0.0;
-                    distance = sqrt(cloud_projected->points[number].x*cloud_projected->points[number].x+cloud_projected->points[number].y*cloud_projected->points[number].y);
+                    //distance = sqrt(cloud_projected->points[number].x*cloud_projected->points[number].x+cloud_projected->points[number].y*cloud_projected->points[number].y);
+                    //temp.r=r;
+                    //temp.x=cloud_projected->points[number].x*(distance+temp.r)/distance;
+                    //temp.y=cloud_projected->points[number].y*(distance+temp.r)/distance;;
+                    distance = sqrt(obstacleCloud.at(zy_i)->points[number].x*obstacleCloud.at(zy_i)->points[number].x+obstacleCloud.at(zy_i)->points[number].y*obstacleCloud.at(zy_i)->points[number].y);
                     temp.r=r;
-                    temp.x=cloud_projected->points[number].x*(distance+temp.r)/distance;
-                    temp.y=cloud_projected->points[number].y*(distance+temp.r)/distance;;
+                    temp.x=obstacleCloud.at(zy_i)->points[number].x*(distance+temp.r)/distance;
+                    temp.y=obstacleCloud.at(zy_i)->points[number].y*(distance+temp.r)/distance;;
                     obstacle.push_back(temp);
                 }
                 else

@@ -55,9 +55,9 @@ static bool isIMUUsed=false;
 static bool isVisionUsed=false;
 static double TDextend=0.07;
 static double dPitch=0;
-static double bodyElevation=0.97;
-static double stepHeight=0.075;
-static double dutyFactor{0.625};
+static double bodyElevation=0.975;
+static double stepHeight=0.085;
+static double dutyFactor{0.62};
 static int stepHalfTotalCount{2000};//half period
 static double pitchAdjFactor{0.9};
 
@@ -198,6 +198,7 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
         dDist=0;
         dAngle=0;
         dLateral=0;
+        gaitCommand=GaitCommand::NoCommand;
     }
 
     static double waistStart;
@@ -290,9 +291,9 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
             //*** adjust leg distribution ***//
             double alpha;
-            alpha=3;
+            alpha=2;
             double limit;
-            limit=8.0/180*PI;
+            limit=10.0/180*PI;
 
             if(euler[2]<0)
             {
@@ -1257,23 +1258,27 @@ void parseAdjustSlope(const std::string &cmd, const std::map<std::string, std::s
         }
         else if(i.first =="left")
         {
-            dLateral+=0.04;
+            dLateral+=0.03;
 
         }
         else if (i.first == "right")
         {
-            dLateral-=0.04;
+            dLateral-=0.03;
 
         }
         else if (i.first == "bodyHeight")
         {
             bodyElevation=std::stod(i.second);
+            if(bodyElevation-stepHeight<0.85)
+                stepHeight=bodyElevation-0.85;
 
         }
         else if (i.first == "legHeight")
         {
 
             stepHeight=std::stod(i.second);
+            if(bodyElevation-stepHeight<0.85)
+               bodyElevation=stepHeight+0.85;
 
         }
         else if (i.first == "stop")
@@ -1836,7 +1841,7 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
     static int stepNumFinished=0;
     static int stepCount=0;
     static bool isStepFinished=false;
-    static double dutyFactor{0.55};
+    //static double dutyFactor{0.55};
 
     if(param.count==0)
     {
@@ -1844,11 +1849,10 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
         stepNumFinished=0;
         stepCount=0;
         isStepFinished=false;
-
         dDist=0;
-
         dLateral=0;
         dAngle=0;
+        gaitCommand=GaitCommand::NoCommand;
     }
 
     static double waistStart;
@@ -1900,7 +1904,7 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
         swingCount1=int(param.totalCount/dutyFactor*(1-dutyFactor));
         stanceCount1=param.totalCount;
         swingCount2=int(ratio*swingCount1);
-        stanceCount2=stanceCount1;
+        stanceCount2=swingCount2+stanceCount1-swingCount1;
 
 
         if(stepCount==0) //update vision and imu to update this configuration and compute the next configuration
@@ -1932,9 +1936,9 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
 
             //*** adjust leg distribution ***//
             double alpha;
-            alpha=3;
+            alpha=2;
             double limit;
-            limit=8.0/180*PI;
+            limit=10.0/180*PI;
 
             if(euler[2]<0)
             {
