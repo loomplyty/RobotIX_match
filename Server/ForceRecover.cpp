@@ -45,6 +45,7 @@ auto ForceRecoverParse(const std::string &cmd, const std::map<std::string, std::
         else if (i.first == "leg")
         {
             auto leg_id = std::stoi(i.second);
+            std:cout<<"parse leg_id:"<<leg_id<<std::endl;
 
             if (leg_id < 0 || leg_id>5)throw std::runtime_error("invalide param in parseRecover func");
 
@@ -52,6 +53,8 @@ auto ForceRecoverParse(const std::string &cmd, const std::map<std::string, std::
             param.active_leg[leg_id] = true;
             std::fill_n(param.active_motor, MOTOR_NUM, false);
             std::fill_n(param.active_motor + leg_id * 3, 3, true);
+
+
         }
         else if (i.first == "t1")
         {

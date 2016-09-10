@@ -665,9 +665,17 @@
             <ro/>
             <ec default="ec_param">
                 <ec_param type="group">
+                    <motor_param type="unique" default="waist">
+                        <all abbreviation="a"/>
+                        <first abbreviation="f"/>
+                        <second abbreviation="s"/>
+                        <waist abbreviation="w"/>
+                        <motor abbreviation="m" type="intArray" default="18"/>
+                        <physical_motor abbreviation="p" type="intArray" default="18"/>
+                        <leg abbreviation="l" type="intArray" default="0"/>
+                    </motor_param>
                     <totalCount abbreviation="t" type="int" default="3000"/>
-                    <motor abbreviation="m" type="int" default="0"/>
-                    <length abbreviation="l" type="double" default="0.01"/>
+                    <distance abbreviation="d" type="double" default="0"/>
                 </ec_param>
             </ec>
             <rcw default="rcw_param">
