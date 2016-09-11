@@ -1,5 +1,4 @@
 #include "move_single_leg.h"
-
 auto moveSingleLegParse(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg)->void
 {
 	MslParam param;
@@ -37,6 +36,14 @@ auto moveSingleLegParse(const std::string &cmd, const std::map<std::string, std:
 		{
 			param.isAbsolute = false;
 		}
+        else if (i.first == "contact_detect")
+        {
+            param.isContactDetect=true;
+        }
+        else if (i.first == "contact_not_detect")
+        {
+            param.isContactDetect=false;
+        }
 	}
 
 	msg.copyStruct(param);
@@ -46,6 +53,7 @@ auto moveSingleLegGait(aris::dynamic::Model &model, const aris::dynamic::PlanPar
 {
 	auto &robot = static_cast<Robots::RobotTypeIII &>(model);
 	auto &param = static_cast<const MslParam &>(param_in);
+
 
 	static double beginPee[3], targetPee[3];
 	static double beginWa;
@@ -77,6 +85,12 @@ auto moveSingleLegGait(aris::dynamic::Model &model, const aris::dynamic::PlanPar
 	}
 	robot.SetWa(beginWa);
 	robot.pLegs[id]->SetPee(Pee, robot.body());
+
+    if(param.force_data->at(id).Fz<120 && param.isContactDetect)
+    {
+        rt_printf("leg: %d contact ground\n",id);
+        return 0;
+    }
 
 	return param.totalCount - param.count - 1;
 }

@@ -9,7 +9,7 @@
 #include <map>
 #include <string>
 #include <stdlib.h>
-
+#include "rtdk.h"
 #include <aris.h>
 #include <Robot_Type_III.h>
 
@@ -23,6 +23,7 @@ struct MslParam final :public aris::server::GaitParamBase
 	int legID{ 0 };
 	double displacement[3]{ 0 };
 	bool isAbsolute{ false }; //用于判断移动命令是绝对坐标还是相对坐标
+    bool isContactDetect{false};
 };
 
 auto moveSingleLegParse(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg)->void;

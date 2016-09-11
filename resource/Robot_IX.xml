@@ -949,6 +949,10 @@
                         <absolute abbreviation="a"/>
                         <relative abbreviation="r"/>
                     </dir_param>
+                    <force_param type="unique" default="contact_detect">
+                    <contact_detect abbreviation="c"/>
+                    <contact_not_detect abbreviation="u"/>
+                    </force_param>
                 </msl_param>
             </msl>
         </Commands>
