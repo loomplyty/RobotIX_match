@@ -818,6 +818,7 @@
                     <left abbreviation="a"/>
                     <right abbreviation="d"/>
                     <stop abbreviation="s"/>
+                    <pitch abbreviation="p" type="double" default="0"/>  
                     <bodyHeight abbreviation ="b" type="double" default="0.99"/>
                     <legHeight abbreviation ="h" type="double" default="0.1"/>
                 </adj_param>
@@ -915,6 +916,7 @@
                      <stepHeight abbreviation="s" type="double" default="0.25"/>
                      <bodyHeight abbreviation="b" type="double" default="1.13"/>
                      <normalHeight abbreviation="n" type="double" default="0.05"/>
+                     <footMoveTime abbreviation="t" type="int" default="3900"/>
                  </up25_param>
             </up25>
             <dw25 default="dw25_param">
@@ -922,6 +924,7 @@
                      <stepHeight abbreviation="s" type="double" default="0.25"/>
                      <bodyHeight abbreviation="b" type="double" default="0.88"/>
                      <normalHeight abbreviation="n" type="double" default="0.05"/>
+                     <footMoveTime abbreviation="t" type="int" default="3900"/>
                  </dw25_param>
             </dw25>
              <cc default="cc_param">
@@ -1059,5 +1062,5 @@
     <Sensors>
         <IMU active="true" type="xsens_imu" portLinux="/dev/ttyUSB0" baudRate="921600" sampleRate="400" PeImuGround2BodyGound="{0,0,0,PI,PI/2,3*PI/2}" PeImu2Body="{0,0,0,0,PI/2,PI/2}"/>
     </Sensors>
-    <UDP remote_ip="192.168.2.101" remote_port="6661" local_port="6660"/>
+    <UDP remote_ip="192.168.2.102" remote_port="6661" local_port="6660"/>
 </RobotIX>

@@ -115,6 +115,10 @@ void ParseUp25Step(const std::string &cmd, const map<std::string, std::string> &
         {
             param.normalHeight = stod(i.second);
         }
+        else if(i.first == "footMoveTime")
+        {
+            param.footMoveTime = stoi(i.second);
+        }
         else
         {
             std::cout<<"Parse Failed! "<< std::endl;
@@ -143,6 +147,10 @@ void ParseDown25Step(const std::string &cmd, const map<std::string, std::string>
         else if(i.first == "normalHeight")
         {
             param.normalHeight = stod(i.second);
+        }
+        else if(i.first == "footMoveTime")
+        {
+            param.footMoveTime = stoi(i.second);
         }
         else
         {
@@ -673,8 +681,8 @@ int Up25StepTwoTwoGait(aris::dynamic::Model &model, const aris::dynamic::PlanPar
     static double beginBodyPEE[6];
     static double beginPEE[18];
 
-    int upBodyCount = 1000;
-    int moveBodyCount = 4500;
+    int upBodyCount = 1500;
+    int moveBodyCount = param.footMoveTime;
 
     double bodyPee[6] = {0};
     double feetPee[18]  = {0};
@@ -1068,8 +1076,8 @@ int Down25StepGait(aris::dynamic::Model &model, const aris::dynamic::PlanParamBa
     static double beginBodyPEE[6];
     static double beginPEE[18];
 
-    int upBodyCount = 1000;
-    int moveBodyCount = 4500;
+    int upBodyCount = 500;
+    int moveBodyCount = param.footMoveTime;
 
     double bodyPee[6] = {0};
     double feetPee[18]  = {0};

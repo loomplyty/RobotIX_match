@@ -11,6 +11,7 @@ struct UpOneStepParam final :public aris::server::GaitParamBase
     double stepHeight;
     double bodyHeight;
     double normalHeight;
+    std::int32_t footMoveTime;
     std::int32_t totalCount;
 };
 void ParseUp25Step(const std::string &cmd, const map<std::string, std::string> &params, aris::core::Msg &msg);

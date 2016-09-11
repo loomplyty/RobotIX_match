@@ -53,13 +53,14 @@ static double dLateral=0;
 static bool isForceUsed=false;
 static bool isIMUUsed=false;
 static bool isVisionUsed=false;
-static double TDextend=0.07;
+static double TDextend=0.06;
 static double dPitch=0;
 static double bodyElevation=0.975;
 static double stepHeight=0.085;
-static double dutyFactor{0.62};
+static double dutyFactor{0.6};
 static int stepHalfTotalCount{2000};//half period
-static double pitchAdjFactor{0.9};
+static double pitchAdjFactor{1};
+static double humanPitch{0};
 
 aris::control::Pipe<robotData> logPipe(true);
 
@@ -181,12 +182,12 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
     static bool isStepFinished=false;
 
     static double stdLegPee2C[18]=
-    {  -0.33,0,-0.575,
+    {  -0.3,0,-0.575,
        -0.425,0,0,
-       -0.33,0,0.575,
-       0.33,0,-0.575,
+       -0.3,0,0.575,
+       0.3,0,-0.575,
        0.425,0,0,
-       0.33,0,0.575
+       0.3,0,0.575
     };
 
     if(param.count==0)
@@ -280,8 +281,14 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
             memset(euler,0,sizeof(double)*3);
             if(isIMUUsed==true)
                 param.imu_data->toEulBody2Ground(euler,"231");
+            else 
+            {
+               euler[0]=0; 
+               euler[1]=0;
+               euler[2]=humanPitch;
+            }
 
-            rt_printf("231 YAW ROLL PITCH,imu_data:%f %f %f corrected %f %f %f\n",euler[0],euler[1],euler[2],asin(sin(euler[0])),asin(sin(euler[1])),asin(sin(euler[2])));
+            rt_printf("231 YAW ROLL PITCH: %f %f %f corrected %f %f %f\n",euler[0],euler[1],euler[2],asin(sin(euler[0])),asin(sin(euler[1])),asin(sin(euler[2])));
 
             euler[0]=0;// yaw being zero
             euler[1]=asin(sin(euler[1]));
@@ -291,40 +298,40 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
             //*** adjust leg distribution ***//
             double alpha;
-            alpha=2;
+            alpha=2.5;
             double limit;
-            limit=10.0/180*PI;
+            limit=8.0/180*PI;
 
             if(euler[2]<0)
             {
                 rt_printf("pitch! ! ! %f\n",euler[2]);
-                stdLegPee2C[0]=-0.33;
-                stdLegPee2C[9]=0.33;
+                stdLegPee2C[0]=-0.3;
+                stdLegPee2C[9]=0.3;
 
-                stdLegPee2C[6]=-0.33-alpha*abs(sin(euler[2]));
-                stdLegPee2C[15]=0.33+alpha*abs(sin(euler[2]));
+                stdLegPee2C[6]=-0.3-alpha*abs(sin(euler[2]));
+                stdLegPee2C[15]=0.3+alpha*abs(sin(euler[2]));
 
 
                 if(euler[2]<-limit)
                 {
-                    stdLegPee2C[6]=-0.33-alpha*abs(sin(limit));
-                    stdLegPee2C[15]=0.33+alpha*abs(sin(limit));
+                    stdLegPee2C[6]=-0.3-alpha*abs(sin(limit));
+                    stdLegPee2C[15]=0.3+alpha*abs(sin(limit));
                 }
 
             }
             else
             {
 
-                stdLegPee2C[0]=-0.33-alpha*abs(sin(euler[2]));
-                stdLegPee2C[9]=0.33+alpha*abs(sin(euler[2]));
+                stdLegPee2C[0]=-0.3-alpha*abs(sin(euler[2]));
+                stdLegPee2C[9]=0.3+alpha*abs(sin(euler[2]));
 
-                stdLegPee2C[6]=-0.33;
-                stdLegPee2C[15]=0.33;
+                stdLegPee2C[6]=-0.3;
+                stdLegPee2C[15]=0.3;
 
                  if(euler[2]>limit)
                 {
-                    stdLegPee2C[0]=-0.33-alpha*abs(sin(limit));
-                    stdLegPee2C[9]=0.33+alpha*abs(sin(limit));
+                    stdLegPee2C[0]=-0.3-alpha*abs(sin(limit));
+                    stdLegPee2C[9]=0.3+alpha*abs(sin(limit));
                 }
 
             }
@@ -1264,7 +1271,11 @@ void parseAdjustSlope(const std::string &cmd, const std::map<std::string, std::s
         else if (i.first == "right")
         {
             dLateral-=0.03;
-
+        }
+        else if (i.first == "pitch")
+        {
+            if(isIMUUsed==false)
+                humanPitch=-std::stod(i.second)/180*PI;// i.second is the input angle +means going up - means going down 
         }
         else if (i.first == "bodyHeight")
         {
@@ -1877,12 +1888,12 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
     static double legHeight{0.1};
 
     static double stdLeg2C[18]=
-    {  -0.33,-0,-0.575,
+    {  -0.3,-0,-0.575,
        -0.475,-0,0,
-       -0.33,-0,0.575,
-       0.33,-0,-0.575,
+       -0.3,-0,0.575,
+       0.3,-0,-0.575,
        0.475,-0,0,
-       0.33,-0,0.575
+       0.3,-0,0.575
     };
 
     switch(gaitState)
@@ -1898,7 +1909,7 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
         int swingCount2;
         int stanceCount2;
         double ratio;
-        ratio=0.6;
+        ratio=0.8;
 
 
         swingCount1=int(param.totalCount/dutyFactor*(1-dutyFactor));
@@ -1926,6 +1937,12 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
             memset(euler,0,sizeof(double)*3);
             if(isIMUUsed==true)
                 param.imu_data->toEulBody2Ground(euler,"231");
+            else
+            {
+               euler[0]=0;
+               euler[1]=0;
+               euler[2]=humanPitch;
+            }
 
             rt_printf("231 YAW ROLL PITCH,imu_data:%f %f %f corrected %f %f %f\n",euler[0],euler[1],euler[2],asin(sin(euler[0])),asin(sin(euler[1])),asin(sin(euler[2])));
 
@@ -1936,39 +1953,39 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
 
             //*** adjust leg distribution ***//
             double alpha;
-            alpha=2;
+            alpha=2.5;
             double limit;
-            limit=10.0/180*PI;
+            limit=8.0/180*PI;
 
             if(euler[2]<0)
             {
-                stdLeg2C[0]=-0.33;
-                stdLeg2C[9]=0.33;
+                stdLeg2C[0]=-0.3;
+                stdLeg2C[9]=0.3;
 
-                stdLeg2C[6]=-0.33-alpha*abs(sin(euler[2]));
-                stdLeg2C[15]=0.33+alpha*abs(sin(euler[2]));
+                stdLeg2C[6]=-0.3-alpha*abs(sin(euler[2]));
+                stdLeg2C[15]=0.3+alpha*abs(sin(euler[2]));
 
 
                 if(euler[2]<-limit)
                 {
-                    stdLeg2C[6]=-0.33-alpha*abs(sin(limit));
-                    stdLeg2C[15]=0.33+alpha*abs(sin(limit));
+                    stdLeg2C[6]=-0.3-alpha*abs(sin(limit));
+                    stdLeg2C[15]=0.3+alpha*abs(sin(limit));
                 }
 
             }
             else
             {
 
-                stdLeg2C[0]=-0.33-alpha*abs(sin(euler[2]));
-                stdLeg2C[9]=0.33+alpha*abs(sin(euler[2]));
+                stdLeg2C[0]=-0.3-alpha*abs(sin(euler[2]));
+                stdLeg2C[9]=0.3+alpha*abs(sin(euler[2]));
 
-                stdLeg2C[6]=-0.33;
-                stdLeg2C[15]=0.33;
+                stdLeg2C[6]=-0.3;
+                stdLeg2C[15]=0.3;
 
                  if(euler[2]>limit)
                 {
-                    stdLeg2C[0]=-0.33-alpha*abs(sin(limit));
-                    stdLeg2C[9]=0.33+alpha*abs(sin(limit));
+                    stdLeg2C[0]=-0.3-alpha*abs(sin(limit));
+                    stdLeg2C[9]=0.3+alpha*abs(sin(limit));
                 }
 
             }

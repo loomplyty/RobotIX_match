@@ -61,7 +61,6 @@ int moveWithRotate(aris::dynamic::Model &model, const aris::dynamic::PlanParamBa
     static double pEE[18];
     if(param.count==0)
     {
-
         robot.GetPeb(beginBodyPE213,"213");
         robot.GetPee(pEE);
         robot.GetWa(beginWa);

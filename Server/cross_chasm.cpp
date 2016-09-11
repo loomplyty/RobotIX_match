@@ -59,7 +59,7 @@ auto crossChasmGait(aris::dynamic::Model &model, const aris::dynamic::PlanParamB
     const double targetPeb_Y[13]{ 0.05, 0, 0, -0.05, 0, 0.05, 0, -0.05, 0, 0.05, 0, 0, -0.05 };
 	const double targetPeb_Z[13]{ -0.1, -0.175, 0, -0.275, -0.25, -0.37, 0, -0.37, -0.25, -0.275, 0, -0.175, -0.1 };
 	const double stepLength[13]{ 0, 0.55, 0.65, 1.04, 0, 0.75, 1.04, 0.75, 0, 1.04, 0.65, 0.55, 0 };
-	const double stepWidth[13]{ 0, 0.1, 0, 0.1, 0, 0, 0, 0, 0, -0.1, 0, -0.1, 0 };
+	const double stepWidth[13]{ 0, 0.05, 0, 0.05, 0, 0, 0, 0, 0, -0.05, 0, -0.05, 0 };
 	const int backwardSeq[13]{ -1, 0, 1, 2, -1, 0, 1, 2, -1, 0, 1, 2, -1 };
 	const int forwardSeq[13]{ -1, 2, 1, 0, -1, 2, 1, 0, -1, 2, 1, 0, -1 };
 	int legSequence[13];
@@ -85,7 +85,8 @@ auto crossChasmGait(aris::dynamic::Model &model, const aris::dynamic::PlanParamB
 	wv_param.targetPeb[2] = targetPeb_Z[i] * param.chasmWidth * sign;
 	int ret = waveGait(robot, wv_param);
 
-	//test
+	/*
+    //test
     if (param.count % 1000 == 0)
 	{
 		double testPee[18], testPeb[6];
@@ -98,6 +99,7 @@ auto crossChasmGait(aris::dynamic::Model &model, const aris::dynamic::PlanParamB
 		rt_printf("testPee_Y: %f %f %f %f %f %f\n", testPee[1], testPee[4], testPee[7], testPee[10], testPee[13], testPee[16]);
 		rt_printf("testPee_Z: %f %f %f %f %f %f\n\n", testPee[2], testPee[5], testPee[8], testPee[11], testPee[14], testPee[17]);
 	}
+    */
 
     return 13 * param.totalCount - param.count - 1;
 }
