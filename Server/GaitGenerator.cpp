@@ -1615,7 +1615,7 @@ void GaitGenerator::GetBodyOffsetRobotIX(const double pitch, const double roll, 
     // only for test
     offset[0]=bodyElevation*sin(roll);
     offset[1]=0.0;
-    offset[2]=(-bodyElevation-0.2)*tan(pitch);// not sure depend on robot elevation
+    offset[2]=(-bodyElevation-0.3)*tan(pitch);// not sure depend on robot elevation
     rt_printf("offset %f %f %f\n",offset[0],offset[1],offset[2]);
 }
 void GaitGenerator::GetPlaneFromStanceLegs(const double *stanceLegs, double *normalVector)

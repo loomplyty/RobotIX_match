@@ -205,7 +205,7 @@ auto forceRecoverGait(aris::dynamic::Model &model, const aris::dynamic::PlanPara
             {
                 param.force_data->at(i).isZeroingRequested = true;
             }
-            else if(param.count>param.recover_count+100 && !isContact[i]) // detect ground contact after 0.1 second
+            else if(param.count>param.recover_count+600 && !isContact[i]) // detect ground contact after 0.1 second
             {
                 // leg id == i
                 if(param.force_data->at(i).Fz<param.force_threshold_y)

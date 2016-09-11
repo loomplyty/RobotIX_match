@@ -4,6 +4,7 @@
 #include <aris.h>
 #include <Robot_Base.h>
 #include <Robot_Type_I.h>
+#include <Robot_Type_III.h>
 #include "TrajectoryGenerator.h"
 //#include "RofoConfig.h"
 #include "log_data.h"

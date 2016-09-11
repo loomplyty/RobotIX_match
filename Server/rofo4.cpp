@@ -113,7 +113,7 @@ auto Rofo::rofoParse(const std::string &cmd, const std::map<std::string, std::st
 auto Rofo::rofoGait(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &param_in)->int
 {
 
-    auto &robot = static_cast<Robots::RobotBase &>(model);
+    auto &robot = static_cast<Robots::RobotTypeIII &>(model);
     auto &param = static_cast<const CLIMB_PARAM &>(param_in);
 
 
@@ -203,9 +203,9 @@ auto Rofo::ayParse(const std::string &cmd, const std::map<std::string, std::stri
 auto Rofo::ayGait(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &param_in)->int
 {
     //a duplicated function of recoverGait()
-    auto &robot = static_cast<Robots::RobotBase &>(model);
+    auto &robot = static_cast<Robots::RobotTypeIII &>(model);
     auto &param = static_cast<const Ay_Param &>(param_in);
-
+    static double beginWa;
 
     for(int i=0;i<18;i++)
     {
@@ -227,6 +227,7 @@ auto Rofo::ayGait(aris::dynamic::Model &model, const aris::dynamic::PlanParamBas
         // get beginPee, then calculate the endPee
         robot.GetPee(beginPee, robot.body());
         robot.GetPee(endPee, robot.body());
+        robot.GetWa(beginWa);
 
         const double pe[6]{ 0 };
         robot.SetPeb(pe);
@@ -273,6 +274,7 @@ auto Rofo::ayGait(aris::dynamic::Model &model, const aris::dynamic::PlanParamBas
             }
         }
     }
+    robot.SetWa(beginWa);
 
     // recover 自己做检查 //
     for (int i = 0; i<18; ++i)
