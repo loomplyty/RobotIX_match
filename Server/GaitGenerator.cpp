@@ -59,7 +59,7 @@ static double bodyElevation=0.975;
 static double stepHeight=0.085;
 static double dutyFactor{0.6};
 static int stepHalfTotalCount{2000};//half period
-static double pitchAdjFactor{1};
+static double pitchAdjFactor{0.9};
 static double humanPitch{0};
 
 aris::control::Pipe<robotData> logPipe(true);
@@ -338,6 +338,13 @@ int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanP
 
             stdLegPee2C[5]=0.1*sin(euler[2]);
             stdLegPee2C[14]=0.1*sin(euler[2]);
+            
+            double hipD;
+            hipD=0.125;
+            stdLegPee2C[2]=-0.575+hipD*abs(sin(euler[2]));
+            stdLegPee2C[8]=0.575-hipD*abs(sin(euler[2]));
+            stdLegPee2C[11]=-0.575+hipD*abs(sin(euler[2]));
+            stdLegPee2C[17]=0.575-hipD*abs(sin(euler[2]));
 
             rt_printf("std legpee2c\n");
             for (int i=0;i<6;i++)
@@ -1625,8 +1632,8 @@ void GaitGenerator::GetBodyOffsetRobotIX(const double pitch, const double roll, 
 {
     // only for test
     offset[0]=bodyElevation*sin(roll);
-    offset[1]=0.0;
-    offset[2]=(-bodyElevation-0.3)*tan(pitch);// not sure depend on robot elevation
+    offset[1]=1.2*(bodyElevation*cos(pitch)-bodyElevation);
+    offset[2]=(-bodyElevation-0.2)*sin(pitch);// not sure depend on robot elevation
     rt_printf("offset %f %f %f\n",offset[0],offset[1],offset[2]);
 }
 void GaitGenerator::GetPlaneFromStanceLegs(const double *stanceLegs, double *normalVector)
@@ -1993,6 +2000,13 @@ int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &p
             stdLeg2C[5]=0.1*sin(euler[2]);
             stdLeg2C[14]=0.1*sin(euler[2]);
 
+
+            double hipD;
+            hipD=0.125;
+            stdLeg2C[2]=-0.575+hipD*abs(sin(euler[2]));
+            stdLeg2C[8]=0.575-hipD*abs(sin(euler[2]));
+            stdLeg2C[11]=-0.575+hipD*abs(sin(euler[2]));
+            stdLeg2C[17]=0.575-hipD*abs(sin(euler[2]));
 
             //in this scheduling scheme, the body is set on the waist
             RobotConfig Config0_2_b0;
