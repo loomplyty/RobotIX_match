@@ -15,43 +15,16 @@ using namespace std;
 #include "unistd.h"
 #endif
 
-// CZJ gait 
-#include "Move_Gait.h"
 
 // TY gait
-#include "Kinect2.h"
-//#include "Kinect2Test.h"
-#include "GaitGenerator.h"
+ #include "FreeGait.h"
 
-// XYL gait
-#include "rofo4.h"
-#include "ForceRecover.h"
-
-// CX, ZYN, ZY's gait
-#include "Vision_Gait.h"
-#include "VisionSensor.h"
-#include "ClimbStair.h"
-#include "PassStepDitch.h"
-#include "Calibration.h"
-#include "TreePass.h"
-#include "UpOneStep.h"
-
-// LJM gait
-#include "cross_chasm.h"
-#include "move_single_leg.h"
 
 int main(int argc, char *argv[])
 {
-    ForceTask::ForceWalk forcewalker;
-	std::string xml_address;
+    std::string xml_address;
 
-    velodyne1.Start();
 
-    PassStepDitch::adjustWrapper.AdjustStart();
-
-    Calibration::calibrationWrapper.CalibrationStart();
-    
-    TreePass::treePassWrapper.TreePassStart();
 
     if (argc <= 1)
     {
@@ -89,55 +62,18 @@ int main(int argc, char *argv[])
     rs.addCmd("rcir", Robots::Gait::recoverParse, Robots::Gait::recoverInRampGait);
 
 
-    rs.addCmd("cmb",ForceTask::parseContinueMoveBegin,ForceTask::continueMove);
-    rs.addCmd("cmj",ForceTask::parseContinueMoveJudge,ForceTask::continueMove);
-    rs.addCmd("odb",ForceTask::parseOpenDoorBegin,ForceTask::openDoor);
-    rs.addCmd("odj",ForceTask::parseOpenDoorJudge,ForceTask::openDoor);
-    rs.addCmd("ffd",Robots::walkParse, ForceTask::forceForward);
 
-    // CZJ gait cmd
-    rs.addCmd("fcw",forcewalker.parseForceWalk,forcewalker.forceWalk);
 
     //slope walking  TY gait cmds
-    rs.addCmd("adj",VersatileGait::parseAdjustSlope,VersatileGait::GoSlopeByVisionFast2);
-    rs.addCmd("frc",VersatileGait::parseForce,VersatileGait::GoSlopeByVisionFast2);
-    rs.addCmd("imu",VersatileGait::parseIMU,VersatileGait::GoSlopeByVisionFast2);
-    rs.addCmd("vis",VersatileGait::parseVision,VersatileGait::GoSlopeByVisionFast2);
-    rs.addCmd("gsvf2",VersatileGait::parseGoSlopeVisionFast2,VersatileGait::GoSlopeByVisionFast2);
-    rs.addCmd("pitch",VersatileGait::parsePitch,VersatileGait::GoSlopeByVisionFast2);
-    rs.addCmd("gs35",VersatileGait::parseGoSlope35,VersatileGait::GoSlope35);
+//    rs.addCmd("adj",VersatileGait::parseAdjustSlope,VersatileGait::GoSlopeByVisionFast2);
+//    rs.addCmd("frc",VersatileGait::parseForce,VersatileGait::GoSlopeByVisionFast2);
+//    rs.addCmd("imu",VersatileGait::parseIMU,VersatileGait::GoSlopeByVisionFast2);
+//    rs.addCmd("vis",VersatileGait::parseVision,VersatileGait::GoSlopeByVisionFast2);
+//    rs.addCmd("gsvf2",VersatileGait::parseGoSlopeVisionFast2,VersatileGait::GoSlopeByVisionFast2);
+//    rs.addCmd("pitch",VersatileGait::parsePitch,VersatileGait::GoSlopeByVisionFast2);
+//    rs.addCmd("gs35",VersatileGait::parseGoSlope35,VersatileGait::GoSlope35);
 
-    // XYL gait cmds
-    rs.addCmd("climb",Rofo::rofoParse,   Rofo::rofoGait);
-    rs.addCmd("edcl", Rofo::rofoEndParse,Rofo::rofoEndGait);
-    rs.addCmd("ay",   Rofo::ayParse,     Rofo::ayGait);
-    rs.addCmd("rcf",  ForceRecoverParse, forceRecoverGait);
 
-    // CX and ZYN's gait
-    rs.addCmd("sdwk", PassStepDitch::adjustWrapper.PassStepDitchParse, PassStepDitch::adjustWrapper.PassStepDitchGait);
-    rs.addCmd("ssdwk", PassStepDitch::adjustWrapper.StopPassStepDitchParse, PassStepDitch::adjustWrapper.PassStepDitchGait);
-    rs.addCmd("ca", Calibration::calibrationWrapper.visionCalibrateParse, Calibration::calibrationWrapper.visionCalibrate);
-    rs.addCmd("cap", Calibration::calibrationWrapper.captureParse, nullptr);
-    rs.addCmd("up", parseMoveWithupstairs, moveupstairs);
-    rs.addCmd("dw", parseMoveWithdownstairs, movedownstairs);
-
-    // ZY's gait
-    rs.addCmd("twk", TreePass::treePassWrapper.TreePassParse, TreePass::treePassWrapper.TreePaseWalk);
-    rs.addCmd("swk", TreePass::treePassWrapper.StopTreePassParse, TreePass::treePassWrapper.TreePaseWalk);
-
-    // LJM gait cmds
-    rs.addCmd("cc", crossChasmParse, crossChasmGait);
-    rs.addCmd("msl", moveSingleLegParse, moveSingleLegGait);
-
-//    rs.addCmd("up25", ParseUp25Step, Up25StepGait);
-    rs.addCmd("up25", ParseUp25Step, Up25StepTwoTwoGait);
-//    rs.addCmd("up15", ParseUp15Step, Up15StepGait);
-    rs.addCmd("dw25", ParseDown25Step, Down25StepGait);
-//    rs.addCmd("dw15", ParseDown15Step, Down15StepGait);
-
-    rs.addCmd("mr",parseMoveWithRotate,moveWithRotate);
-    // XYL gait initializations
-    Rofo::RofoWalkInit();
 
 	rs.open();
 

@@ -39,6 +39,7 @@ struct robotData
     double force[6];
     int legPhase[6];
 };
+
 enum FlagVision
 {
     Free=0,
