@@ -140,8 +140,6 @@ void Base::s_trans(const double* trans,double*TM)
     TM[14]=0;
     TM[15]=1;
 }
-//copy other matrix computation fom py
-
 
 void Base::display(const double *vec,int length)
 {
@@ -207,6 +205,26 @@ void Base::s_triIncenter(const double* triCoordinates,double* center)
     center[0]=(P1[0]*L1+P2[0]*L2+P3[0]*L3)/(L1+L2+L3);
     center[1]=(P1[1]*L1+P2[1]*L2+P3[1]*L3)/(L1+L2+L3);
     center[2]=(P1[2]*L1+P2[2]*L2+P3[2]*L3)/(L1+L2+L3);
+}
+
+void Base::s_triPlane(const double* triCoordinates, double* normalVec)
+{
+    double tri_2_to_1[3];
+    double tri_3_to_1[3];
+
+    tri_2_to_1[0]=triCoordinates[0]-triCoordinates[3];
+    tri_2_to_1[1]=triCoordinates[1]-triCoordinates[4];
+    tri_2_to_1[2]=triCoordinates[2]-triCoordinates[5];
+    tri_3_to_1[0]=triCoordinates[0]-triCoordinates[6];
+    tri_3_to_1[1]=triCoordinates[1]-triCoordinates[7];
+    tri_3_to_1[2]=triCoordinates[2]-triCoordinates[8];
+
+    aris::dynamic::s_cro3(tri_2_to_1,tri_3_to_1,normalVec);
+    double norm=s_norm(normalVec);
+    int y_sign=s_sign(normalVec[1]);
+    normalVec[0]=normalVec[0]*y_sign/norm;
+    normalVec[1]=normalVec[1]*y_sign/norm;
+    normalVec[2]=normalVec[2]*y_sign/norm;
 }
 
 

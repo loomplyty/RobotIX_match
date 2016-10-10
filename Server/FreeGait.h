@@ -3,10 +3,10 @@
 
 #include <aris.h>
 
-#include <thread>
-#include <functional>
-#include <cstdint>
-#include <map>
+//#include <thread>
+//#include <functional>
+//#include <cstdint>
+//#include <map>
 
 
 #include <Robot_Type_III.h>
@@ -21,24 +21,42 @@
 namespace FreeGait
 {
 
-//thread
+enum GaitMode
+{
+    Single=1,
+    MultiDiscrete=2,
+    MultiContinuous=3
+};
+struct FreeGaitParams :public aris::server::GaitParamBase
+{
+    std::int32_t totalCount{ 3000 };
+    double n{1};
+    double d{ 0.1 };
+    double h{ 0.08 };
+    double a{ 0 };
+    double b{ 0 };
+    double l{0};
+    int m{GaitMode::Single};
+ };
+
+
+
+//***thread***//
 void startLogDataThread();
 
-//parse functions and gait functions
-void parseAdjustSlope(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
+//***parse functions and gait functions***//
+//adjust parameters
+void parseFreeGaitAdjust(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
+
+//sensor switch
 void parseForce(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
 void parseIMU(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
 void parseVision(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
-void parsePitch(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
-void parseGoSlope35(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
-void parseGoSlopeVisionFast2(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
 
-int GoSlopeByVisionFast2(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &param_in);
-int GoSlope35(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &param_in);
-
-
-
-
+// parse functions
+void parseGoFreeGait(const std::string &cmd, const std::map<std::string, std::string> &params, aris::core::Msg &msg);
+// gait functions
+int GoFreeGait(aris::dynamic::Model &model, const aris::dynamic::PlanParamBase &param_in);
 
 }
 

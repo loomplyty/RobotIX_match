@@ -63,6 +63,12 @@ int main(int argc, char *argv[])
 
 
 
+    //***Free Gait***//
+    rs.addCmd("fg",FreeGait::parseGoFreeGait,FreeGait::GoFreeGait);
+    rs.addCmd("adj",FreeGait::parseFreeGaitAdjust,FreeGait::GoFreeGait);
+    rs.addCmd("frc",FreeGait::parseForce,FreeGait::GoFreeGait);
+    rs.addCmd("imu",FreeGait::parseIMU,FreeGait::GoFreeGait);
+    rs.addCmd("vis",FreeGait::parseVision,FreeGait::GoFreeGait);
 
     //slope walking  TY gait cmds
 //    rs.addCmd("adj",VersatileGait::parseAdjustSlope,VersatileGait::GoSlopeByVisionFast2);

@@ -7,6 +7,8 @@
 #include <cstring>
 #include <iostream>
 #include "rtdk.h"
+#include "aris_dynamic.h"
+
 namespace FreeGait
 {
 namespace Base
@@ -31,8 +33,8 @@ void displayRT(const double *vec,int length);
 void display(const double *vec,int length);
 
 //**geometry**//
-void s_triIncenter(const double* stLegs,double* center);
-
+void s_triIncenter(const double* triCoordinates,double* center);
+void s_triPlane(const double* triCoordinates, double* normalVec);
 
 
 }}
