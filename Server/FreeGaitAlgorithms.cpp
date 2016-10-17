@@ -38,7 +38,6 @@ void Algorithms::GetTM_C_2_B(double* Legs_2_b,double *TM_c_2_b)
     Base::s_triPlane(firstPair,y1);
     Base::s_triPlane(secondPair,y2);
 
-
     Base::s_normalize(y1);
     Base::s_normalize(y2);
     y[0]=y1[0]+y2[0];  // this is actually the same as half quaternion method
@@ -46,12 +45,10 @@ void Algorithms::GetTM_C_2_B(double* Legs_2_b,double *TM_c_2_b)
     y[2]=y1[2]+y2[2];
     Base::s_normalize(y);
 
-
     aris::dynamic::s_cro3(x_prime,y,z);
     aris::dynamic::s_cro3(y,z,x);
     Base::s_normalize(x);
     Base::s_normalize(z);
-
 
     double TriC_firstPair[3];
     double TriC_secondPair[3];
@@ -72,7 +69,6 @@ void Algorithms::GetTM_C_2_B(double* Legs_2_b,double *TM_c_2_b)
     TM_c_2_b[11]=0.5*TriC_firstPair[2]+0.5*TriC_secondPair[2];
     TM_c_2_b[15]=1;
 }
-
 
 }
 

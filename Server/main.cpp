@@ -17,7 +17,7 @@ using namespace std;
 
 
 // TY gait
- #include "FreeGait.h"
+#include "FreeGait.h"
 
 
 int main(int argc, char *argv[])
@@ -39,15 +39,15 @@ int main(int argc, char *argv[])
     {
         xml_address = "/home/hex/Desktop/codes/RobotIX_all/resource/Robot_VIII.xml";
     }
-	else
-	{
+    else
+    {
         throw std::runtime_error("invalid robot name, please type in III, VIII or IX");
-	}
+    }
 
-	auto &rs = aris::server::ControlServer::instance();
+    auto &rs = aris::server::ControlServer::instance();
 
     rs.createModel<Robots::RobotTypeIII>();
-	rs.loadXml(xml_address.c_str());
+    rs.loadXml(xml_address.c_str());
     rs.addCmd("en", Robots::Gait::basicParse, nullptr);
     rs.addCmd("ds", Robots::Gait::basicParse, nullptr);
     rs.addCmd("hm", Robots::Gait::basicParse, nullptr);
@@ -65,36 +65,36 @@ int main(int argc, char *argv[])
 
     //***Free Gait***//
     rs.addCmd("fg",FreeGait::parseGoFreeGait,FreeGait::GoFreeGait);
-    rs.addCmd("adj",FreeGait::parseFreeGaitAdjust,FreeGait::GoFreeGait);
+    // rs.addCmd("adj",FreeGait::parseFreeGaitAdjust,FreeGait::GoFreeGait);
     rs.addCmd("frc",FreeGait::parseForce,FreeGait::GoFreeGait);
     rs.addCmd("imu",FreeGait::parseIMU,FreeGait::GoFreeGait);
     rs.addCmd("vis",FreeGait::parseVision,FreeGait::GoFreeGait);
 
     //slope walking  TY gait cmds
-//    rs.addCmd("adj",VersatileGait::parseAdjustSlope,VersatileGait::GoSlopeByVisionFast2);
-//    rs.addCmd("frc",VersatileGait::parseForce,VersatileGait::GoSlopeByVisionFast2);
-//    rs.addCmd("imu",VersatileGait::parseIMU,VersatileGait::GoSlopeByVisionFast2);
-//    rs.addCmd("vis",VersatileGait::parseVision,VersatileGait::GoSlopeByVisionFast2);
-//    rs.addCmd("gsvf2",VersatileGait::parseGoSlopeVisionFast2,VersatileGait::GoSlopeByVisionFast2);
-//    rs.addCmd("pitch",VersatileGait::parsePitch,VersatileGait::GoSlopeByVisionFast2);
-//    rs.addCmd("gs35",VersatileGait::parseGoSlope35,VersatileGait::GoSlope35);
+    //    rs.addCmd("adj",VersatileGait::parseAdjustSlope,VersatileGait::GoSlopeByVisionFast2);
+    //    rs.addCmd("frc",VersatileGait::parseForce,VersatileGait::GoSlopeByVisionFast2);
+    //    rs.addCmd("imu",VersatileGait::parseIMU,VersatileGait::GoSlopeByVisionFast2);
+    //    rs.addCmd("vis",VersatileGait::parseVision,VersatileGait::GoSlopeByVisionFast2);
+    //    rs.addCmd("gsvf2",VersatileGait::parseGoSlopeVisionFast2,VersatileGait::GoSlopeByVisionFast2);
+    //    rs.addCmd("pitch",VersatileGait::parsePitch,VersatileGait::GoSlopeByVisionFast2);
+    //    rs.addCmd("gs35",VersatileGait::parseGoSlope35,VersatileGait::GoSlope35);
 
 
 
-	rs.open();
+    rs.open();
 
-	rs.setOnExit([&]()
-	{
-		aris::core::XmlDocument xml_doc;
-		xml_doc.LoadFile(xml_address.c_str());
-		auto model_xml_ele = xml_doc.RootElement()->FirstChildElement("Model");
-		if (!model_xml_ele)throw std::runtime_error("can't find Model element in xml file");
-		rs.model().saveXml(*model_xml_ele);
+    rs.setOnExit([&]()
+    {
+        aris::core::XmlDocument xml_doc;
+        xml_doc.LoadFile(xml_address.c_str());
+        auto model_xml_ele = xml_doc.RootElement()->FirstChildElement("Model");
+        if (!model_xml_ele)throw std::runtime_error("can't find Model element in xml file");
+        rs.model().saveXml(*model_xml_ele);
 
-		aris::core::stopMsgLoop();
-	});
-	aris::core::runMsgLoop();
+        aris::core::stopMsgLoop();
+    });
+    aris::core::runMsgLoop();
 
 
-	return 0;
+    return 0;
 }
